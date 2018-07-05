@@ -1,0 +1,49 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.20.0'
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+apply plugin: 'com.github.ben-manes.versions'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group 'org.librazy.demo.dubbo'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://repo.spring.io/libs-milestone'
+    }
+}
+
+dependencies {
+    compile 'biz.paluch.redis:lettuce:5.0.0.Beta1'
+    compile 'com.github.kstyrc:embedded-redis:0.6'
+    compile 'io.jsonwebtoken:jjwt:0.9.0'
+    compile 'javax.xml.bind:jaxb-api:2.3.0'
+    compile 'javax.validation:validation-api:2.0.1.Final'
+    compile 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2'
+    compile "org.springframework:spring-beans:$springVersion"
+    compile "org.springframework:spring-context:$springVersion"
+    compile "org.springframework:spring-tx:$springVersion"
+    compile "org.springframework.data:spring-data-commons:$springDataVersion"
+    compile "org.springframework.data:spring-data-jpa:$springDataVersion"
+    compile "org.springframework.security:spring-security-core:$springSecurityVersion"
+
+    runtime "org.springframework:spring-web:$springVersion"
+}
+
+compileJava {
+    options.compilerArgs += ["-Xlint:all"]
+}

@@ -1,0 +1,51 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'https://repo.spring.io/libs-milestone' }
+    }
+
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.20.0'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'war'
+}
+
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.github.ben-manes.versions'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group 'org.librazy.demo.dubbo'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://repo.spring.io/libs-milestone'
+    }
+}
+
+dependencies {
+    compile project(":DubboDemoAPI")
+    compile project(":DubboDemoService")
+}
+
+compileJava {
+    options.compilerArgs += ["-Xlint:all"]
+}
+
+bootRun {
+    environment 'spring.profiles.active', 'dev'
+}
+
+test {
+    useJUnitPlatform()
+    environment 'spring.profiles.active', 'test-default'
+}

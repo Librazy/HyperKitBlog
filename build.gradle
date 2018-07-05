@@ -1,0 +1,13 @@
+buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath 'com.netflix.nebula:gradle-lint-plugin:latest.release'
+    }
+}
+
+allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'nebula.lint' // add as many rules here as you'd like
+    gradleLint.alwaysRun = false
+    gradleLint.rules = ['all-dependency']
+}

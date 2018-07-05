@@ -1,0 +1,2 @@
+include 'DubboDemoAPI', 'DubboDemoProvider', 'DubboDemoServer', 'DubboDemoService'
+rootProject.name = 'DubboDemo'
