@@ -39,7 +39,7 @@ public class RedisLettuceConfig {
     @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
     @Bean(destroyMethod = "stop")
     RedisServer redisServer() {
-        RedisServer redisServer = RedisServer.builder().port(port).setting("maxheap 128M").setting("bind 127.0.0.1").build();
+        RedisServer redisServer = RedisServer.builder().port(port).setting("maxmemory 128M").setting("bind 127.0.0.1").build();
         try {
             redisServer.start();
         } catch (RuntimeException e) {
