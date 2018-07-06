@@ -53,9 +53,7 @@ public class UserSessionServiceImpl implements UserSessionService {
 
     @Override
     public void newSession(String id, String sid, String ua, String key) {
-        if(!"OK".equals(connection.sync().set(RedisUtils.Key(id, sid), key, SetArgs.Builder.ex(86400 * 7).nx()))){
-            connection.sync().discard();
-        } else {
+        if ("OK".equals(connection.sync().set(RedisUtils.Key(id, sid), key, SetArgs.Builder.ex(86400 * 7).nx()))) {
             connection.sync().multi();
             connection.sync().sadd(RedisUtils.Sessions(id), sid);
             connection.sync().setex(RedisUtils.UserAgent(id, sid), 86400 * 7, ua);

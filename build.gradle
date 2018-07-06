@@ -5,9 +5,44 @@ buildscript {
     }
 }
 
+plugins {
+    id "org.sonarqube" version "2.6.2"
+}
+
+repositories { jcenter() }
+
 allprojects {
+    apply plugin: 'jacoco'
     apply plugin: 'idea'
     apply plugin: 'nebula.lint' // add as many rules here as you'd like
     gradleLint.alwaysRun = false
     gradleLint.rules = ['all-dependency']
+}
+
+// https://cristian.io/post/sonar-coverage/
+
+def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
+
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.jacoco.reportPaths", allTestCoverageFile
+    }
+}
+
+task jacocoMergeTest(type: JacocoMerge) {
+    destinationFile = file(allTestCoverageFile)
+    executionData = project.fileTree(dir: '.', include:'**/build/jacoco/test.exec')
+}
+
+task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
+    // used to run the other merge tasks
+}
+
+subprojects {
+    sonarqube {
+        properties {
+            property "sonar.jacoco.reportPaths", allTestCoverageFile
+        }
+    }
 }
