@@ -4,6 +4,8 @@ import java.text.MessageFormat;
 
 public class RedisUtils {
 
+    public static final String OK = "OK";
+
     // SRP Login Session, Base64 binary of SRP6JavascriptServerSessionSHA256
     private static final String SRP_SESSION = "srp"; // user:<id>:srp
 
@@ -18,36 +20,42 @@ public class RedisUtils {
 
     // SRP Session UserAgent, String
     private static final String USER_SESSION_UA = "ua"; // user:<id>:session:<sid>:ua
+    private static final String USER_RECORDS = "user:{0}:{1}";
+    private static final String USER_SESSION_RECORDS = "user:{0}:session:{1}:{2}";
 
-    public static String SignupSession(String id) {
-        return MessageFormat.format("user:{0}:{1}", id, SRP_SIGNUP_SESSION);
+    private RedisUtils() {
+        throw new UnsupportedOperationException();
     }
 
-    public static String SrpSession(String id) {
-        return MessageFormat.format("user:{0}:{1}", id, SRP_SESSION);
+    public static String signupSession(String id) {
+        return MessageFormat.format(USER_RECORDS, id, SRP_SIGNUP_SESSION);
     }
 
-    public static String Sessions(String id) {
-        return MessageFormat.format("user:{0}:{1}", id, USER_SESSIONS);
+    public static String srpSession(String id) {
+        return MessageFormat.format(USER_RECORDS, id, SRP_SESSION);
     }
 
-    public static String Key(String id, String sid) {
-        return MessageFormat.format("user:{0}:session:{1}:{2}", id, sid, USER_SESSION_KEY);
+    public static String sessions(String id) {
+        return MessageFormat.format(USER_RECORDS, id, USER_SESSIONS);
     }
 
-    public static String UserAgent(String id, String sid) {
-        return MessageFormat.format("user:{0}:session:{1}:{2}", id, sid, USER_SESSION_UA);
+    public static String key(String id, String sid) {
+        return MessageFormat.format(USER_SESSION_RECORDS, id, sid, USER_SESSION_KEY);
     }
 
-    public static String Nonce(String nonce) {
+    public static String userAgent(String id, String sid) {
+        return MessageFormat.format(USER_SESSION_RECORDS, id, sid, USER_SESSION_UA);
+    }
+
+    public static String nonce(String nonce) {
         return MessageFormat.format("global:nonce:{0}", nonce);
     }
 
-    public static String CodeExp(String email) {
+    public static String codeExp(String email) {
         return MessageFormat.format("global:code:{0}:exp", email);
     }
 
-    public static String Code(String email) {
+    public static String code(String email) {
         return MessageFormat.format("global:code:{0}", email);
     }
     /*                     <users>

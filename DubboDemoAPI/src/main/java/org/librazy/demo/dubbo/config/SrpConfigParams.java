@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 public class SrpConfigParams {
 
     @Value("${thinbus.N}")
-    public String N;
+    public String n;
 
     @Value("${thinbus.g}")
     public String g;

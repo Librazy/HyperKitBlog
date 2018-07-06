@@ -1,12 +1,12 @@
 package org.librazy.demo.dubbo.test;
 
+import org.h2.tools.Server;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.domain.repo.SrpAccountRepository;
 import org.librazy.demo.dubbo.domain.repo.UserRepository;
-import org.h2.tools.Server;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +20,6 @@ import javax.transaction.Transactional;
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)

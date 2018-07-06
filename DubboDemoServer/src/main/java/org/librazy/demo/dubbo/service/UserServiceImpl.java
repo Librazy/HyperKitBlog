@@ -37,11 +37,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
-        log.debug("Loading user " + id);
+    public UserDetails loadUserByUsername(String id) {
+        log.debug("Loading user {}", id);
         Optional<UserEntity> user = userRepository.findById(Long.valueOf(id));
         if (!user.isPresent()) {
-            log.info("user " + id + "not found when loading");
+            log.info("user {} not found when loading", id);
             throw new UsernameNotFoundException("");
         }
         return createUser(user.get().getSrpAccount());
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserEntity registerUser(SrpSignupForm signupForm) {
-        log.info("Registering new srp user " + signupForm.getEmail());
+        log.info("Registering new srp user {}", signupForm.getEmail());
         UserEntity user = new UserEntity(signupForm.getEmail(), signupForm.getNick());
         new SrpAccountEntity(user, signupForm.getSalt(), signupForm.getVerifier());
         user = userRepository.save(user);

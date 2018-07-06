@@ -38,8 +38,8 @@ class UnitTest {
         long maxR = jwtTokenService.getMaximumRefresh();
         long now = new Date().getTime();
         jwtTokenService.setClock(now);
-        session.newSession("1", "session.id", "UserAgent", "session.key");
-        assertThrows(RuntimeException.class, () -> session.newSession("1", "session.id", "UserAgent", "session.key"));
+        session.newSession("1", "session.id", "userAgent", "session.key");
+        assertThrows(RuntimeException.class, () -> session.newSession("1", "session.id", "userAgent", "session.key"));
         UserEntity user = new UserEntity(1, "user@example.com");
         String token = jwtTokenService.generateToken(user, "session.id");
         Map<String, Object> claims = jwtTokenService.validateClaimsFromToken(token);

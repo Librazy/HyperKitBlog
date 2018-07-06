@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ModelTest {
 
     @Test
-    void ChatMessageTest(){
+    void ChatMessageTest() {
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setContent("Content");
         assertEquals("Content", chatMessage.getContent());

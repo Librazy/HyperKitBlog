@@ -1,10 +1,10 @@
 package org.librazy.demo.dubbo.service;
 
+import com.alibaba.dubbo.config.annotation.Service;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.DefaultClock;
 import io.jsonwebtoken.impl.FixedClock;
 import org.librazy.demo.dubbo.domain.UserEntity;
-import com.alibaba.dubbo.config.annotation.Service;
-import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ public class JwtTokenServiceImpl implements JwtTokenService, Serializable {
 
     private static final long serialVersionUID = -3301605591108950415L;
 
-    private final SigningKeyResolverAdapter key;
+    private final transient SigningKeyResolverAdapter key;
 
     @Value("${jwt.expiration}")
     private Long expiration;
@@ -30,7 +30,7 @@ public class JwtTokenServiceImpl implements JwtTokenService, Serializable {
     @Value("${jwt.refresh.maximum}")
     private Long maximumRefresh;
 
-    private Clock clock = new DefaultClock();
+    private transient Clock clock = new DefaultClock();
 
     @Autowired
     public JwtTokenServiceImpl(SigningKeyResolverAdapter key) {
@@ -48,7 +48,7 @@ public class JwtTokenServiceImpl implements JwtTokenService, Serializable {
     }
 
     @Override
-    public Map<String, Object> validateClaimsFromToken(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException {
+    public Map<String, Object> validateClaimsFromToken(String token) {
         return Jwts.parser()
                    .setClock(clock)
                    .setSigningKeyResolver(key)
@@ -74,7 +74,7 @@ public class JwtTokenServiceImpl implements JwtTokenService, Serializable {
     }
 
     @Override
-    public String refreshToken(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException {
+    public String refreshToken(String token) {
         Date currentDate = clock.now();
         final Date expirationDate = new Date(currentDate.getTime() + expiration * 1000);
 
@@ -97,7 +97,7 @@ public class JwtTokenServiceImpl implements JwtTokenService, Serializable {
 
     @Override
     public void setClock(Long clock) {
-        if (clock == null){
+        if (clock == null) {
             this.clock = new DefaultClock();
         } else {
             this.clock = new FixedClock(new Date(clock));

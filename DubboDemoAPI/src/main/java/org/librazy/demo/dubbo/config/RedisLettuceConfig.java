@@ -6,6 +6,8 @@ import com.lambdaworks.redis.api.StatefulRedisConnection;
 import com.lambdaworks.redis.pubsub.StatefulRedisPubSubConnection;
 import com.lambdaworks.redis.resource.ClientResources;
 import com.lambdaworks.redis.resource.DefaultClientResources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +18,8 @@ import redis.embedded.RedisServer;
 
 @Configuration
 public class RedisLettuceConfig {
+
+    private static Logger logger = LoggerFactory.getLogger(RedisLettuceConfig.class);
 
     @Value("${redis.host}")
     protected String host;
@@ -40,10 +44,12 @@ public class RedisLettuceConfig {
     @Bean(destroyMethod = "stop")
     RedisServer redisServer() {
         RedisServer redisServer = RedisServer.builder().port(port).setting("maxmemory 128M").setting("bind 127.0.0.1").build();
+        logger.info("embedded redis server starting");
         try {
             redisServer.start();
+            logger.info("embedded redis server started");
         } catch (RuntimeException e) {
-            e.printStackTrace();
+            logger.warn("embedded redis server failed to start", e);
         }
         return redisServer;
     }

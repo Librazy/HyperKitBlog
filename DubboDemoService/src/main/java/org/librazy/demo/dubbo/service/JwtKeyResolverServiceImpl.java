@@ -1,9 +1,9 @@
 package org.librazy.demo.dubbo.service;
 
-import org.librazy.demo.dubbo.config.JwtConfigParams;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.bitbucket.thinbus.srp6.js.HexHashedRoutines;
 import io.jsonwebtoken.*;
+import org.librazy.demo.dubbo.config.JwtConfigParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,12 +27,12 @@ public class JwtKeyResolverServiceImpl extends SigningKeyResolverAdapter {
 
     @Override
     @SuppressWarnings("rawtypes")
-    public byte[] resolveSigningKeyBytes(JwsHeader header, Claims claims) throws RuntimeException {
+    public byte[] resolveSigningKeyBytes(JwsHeader header, Claims claims) {
         return resolveSigningKeyBytes(header, (Map<String, Object>) claims);
     }
 
     @SuppressWarnings("rawtypes")
-    private byte[] resolveSigningKeyBytes(JwsHeader header, Map<String, Object> claims) throws RuntimeException {
+    private byte[] resolveSigningKeyBytes(JwsHeader header, Map<String, Object> claims) {
         if (SignatureAlgorithm.forName(header.getAlgorithm()) != SignatureAlgorithm.HS512) {
             throw new UnsupportedJwtException("alg not supported");
         }
@@ -41,7 +41,7 @@ public class JwtKeyResolverServiceImpl extends SigningKeyResolverAdapter {
         String sid = c.getId();
         String key = session.getKey(id, sid);
         if (key == null) {
-            throw new RuntimeException();
+            throw new IllegalArgumentException();
         }
         String k = key.concat(jwtConfigParams.tokenSecret);
         return k.getBytes(HexHashedRoutines.utf8);

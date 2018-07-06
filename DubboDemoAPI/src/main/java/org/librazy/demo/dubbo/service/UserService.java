@@ -5,13 +5,12 @@ import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.SrpSignupForm;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface UserService extends UserDetailsService {
     @Override
     @Transactional(readOnly = true)
-    UserDetails loadUserByUsername(String id) throws UsernameNotFoundException;
+    UserDetails loadUserByUsername(String id);
 
     @Transactional
     UserEntity registerUser(SrpSignupForm signupForm);

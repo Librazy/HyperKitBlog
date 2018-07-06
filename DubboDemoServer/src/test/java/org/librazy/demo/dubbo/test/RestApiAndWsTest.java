@@ -1,10 +1,5 @@
 package org.librazy.demo.dubbo.test;
 
-import org.librazy.demo.dubbo.config.JwtConfigParams;
-import org.librazy.demo.dubbo.config.SrpConfigParams;
-import org.librazy.demo.dubbo.model.*;
-import org.librazy.demo.dubbo.service.UserService;
-import org.librazy.demo.dubbo.service.UserSessionService;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.bitbucket.thinbus.srp6.js.HexHashedVerifierGenerator;
 import com.bitbucket.thinbus.srp6.js.SRP6JavaClientSessionSHA256;
@@ -16,6 +11,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.librazy.demo.dubbo.config.JwtConfigParams;
+import org.librazy.demo.dubbo.config.SrpConfigParams;
+import org.librazy.demo.dubbo.model.*;
+import org.librazy.demo.dubbo.service.UserService;
+import org.librazy.demo.dubbo.service.UserSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -37,7 +37,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.transaction.Transactional;
 import java.net.URI;
@@ -111,13 +111,13 @@ class RestApiAndWsTest {
         userService.clear();
 
         // init the client session and parameters
-        SRP6JavaClientSessionSHA256 signupSession = new SRP6JavaClientSessionSHA256(config.N, config.g);
+        SRP6JavaClientSessionSHA256 signupSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
         signupSession.step1(email, password);
 
         String salt = signupSession.generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
 
         HexHashedVerifierGenerator gen = new HexHashedVerifierGenerator(
-                config.N, config.g, SRP6JavascriptServerSessionSHA256.SHA_256);
+                config.n, config.g, SRP6JavascriptServerSessionSHA256.SHA_256);
         String verifier = gen.generateVerifier(salt, email, password);
 
 
@@ -182,7 +182,7 @@ class RestApiAndWsTest {
         signupSession.getSessionKey(false);
 
         // then try signin
-        SRP6JavaClientSessionSHA256 signinSession = new SRP6JavaClientSessionSHA256(config.N, config.g);
+        SRP6JavaClientSessionSHA256 signinSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
         signinSession.step1(email, password);
 
         SrpChallengeForm srpChallengeForm = new SrpChallengeForm();
@@ -239,8 +239,8 @@ class RestApiAndWsTest {
         refreshForm.setTimestamp(new Date().getTime());
         refreshForm.setNonce(UUID.randomUUID().toString());
 
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new IvParameterSpec(refreshForm.getNonce().getBytes(), 0, 16));
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
         String plain = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
         String sign = Base64.getEncoder().encodeToString(cipher.doFinal(plain.getBytes()));
         refreshForm.setSign(sign);

@@ -32,7 +32,7 @@ sonarqube {
 
 task jacocoMergeTest(type: JacocoMerge) {
     destinationFile = file(allTestCoverageFile)
-    executionData = project.fileTree(dir: '.', include:'**/build/jacoco/test.exec')
+    executionData = project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
 }
 
 task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
@@ -42,6 +42,8 @@ task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
 subprojects {
     sonarqube {
         properties {
+            property "sonar.coverage.exclusions", "**/domain/*.java"
+            property "sonar.exclusions", "**/*Application.java"
             property "sonar.jacoco.reportPaths", allTestCoverageFile
         }
     }

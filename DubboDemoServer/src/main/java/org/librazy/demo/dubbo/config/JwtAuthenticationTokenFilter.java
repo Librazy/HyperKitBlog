@@ -1,10 +1,10 @@
 package org.librazy.demo.dubbo.config;
 
-import org.librazy.demo.dubbo.service.JwtTokenService;
 import com.alibaba.dubbo.config.annotation.Reference;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.jetbrains.annotations.NotNull;
+import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -67,7 +67,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("auth failed with exception:", e);
         }
 
         chain.doFilter(request, response);

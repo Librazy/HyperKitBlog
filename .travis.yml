@@ -2,6 +2,9 @@ language: java
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+script:
+- ./gradlew clean build jacocoMerge
+- ./gradlew sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
 cache:
   directories:
   - $HOME/.gradle/caches/
