@@ -53,14 +53,18 @@ public class UserSessionServiceImpl implements UserSessionService {
 
     @Override
     public void newSession(String id, String sid, String ua, String key) {
-        connection.sync().multi();
-        connection.sync().sadd(RedisUtils.Sessions(id), sid);
-        connection.sync().setex(RedisUtils.Key(id, sid), 86400 * 7, key);
-        connection.sync().setex(RedisUtils.UserAgent(id, sid), 86400 * 7, ua);
-        TransactionResult result = connection.sync().exec();
-        if (result.wasRolledBack()) {
-            throw new RuntimeException("Transaction failed: " + result.size());
+        if(!"OK".equals(connection.sync().set(RedisUtils.Key(id, sid), key, SetArgs.Builder.ex(86400 * 7).nx()))){
+            connection.sync().discard();
+        } else {
+            connection.sync().multi();
+            connection.sync().sadd(RedisUtils.Sessions(id), sid);
+            connection.sync().setex(RedisUtils.UserAgent(id, sid), 86400 * 7, ua);
+            TransactionResult result = connection.sync().exec();
+            if (!result.wasRolledBack()) {
+                return;
+            }
         }
+        throw new RuntimeException("Session already exist or failed to create session");
     }
 
     @Override
@@ -120,8 +124,11 @@ public class UserSessionServiceImpl implements UserSessionService {
 
     @Override
     public String sendCode(String email) {
-        String code = String.valueOf((new SecureRandom().nextInt(899999) + 100000));
-        if (connection.sync().set(RedisUtils.CodeExp(email), String.valueOf(new Date().getTime()), new SetArgs().nx().ex(60)).equals("OK")) {
+        if(!email.contains("@")){
+            throw new RuntimeException("Email not vaild");
+        }
+        String code = String.valueOf((new SecureRandom().nextInt(900000) + 100000));
+        if ("OK".equals(connection.sync().set(RedisUtils.CodeExp(email), String.valueOf(new Date().getTime()), new SetArgs().nx().ex(60)))) {
             connection.sync().setex(RedisUtils.Code(email), 300, code);
             return code;
         }

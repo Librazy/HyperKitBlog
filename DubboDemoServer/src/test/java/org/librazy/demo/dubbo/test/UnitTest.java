@@ -1,15 +1,12 @@
 package org.librazy.demo.dubbo.test;
 
 import com.alibaba.dubbo.config.annotation.Reference;
+import io.jsonwebtoken.Jwts;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.librazy.demo.dubbo.service.UserSessionService;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.PrematureJwtException;
-import io.jsonwebtoken.impl.FixedClock;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -42,6 +39,7 @@ class UnitTest {
         long now = new Date().getTime();
         jwtTokenService.setClock(now);
         session.newSession("1", "session.id", "UserAgent", "session.key");
+        assertThrows(RuntimeException.class, () -> session.newSession("1", "session.id", "UserAgent", "session.key"));
         UserEntity user = new UserEntity(1, "user@example.com");
         String token = jwtTokenService.generateToken(user, "session.id");
         Map<String, Object> claims = jwtTokenService.validateClaimsFromToken(token);

@@ -34,7 +34,6 @@ repositories {
 
 dependencies {
     compile project(":DubboDemoAPI")
-    //compile project(":DubboDemoService")
     compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
@@ -56,6 +55,7 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:3.0.2'
     compile 'org.jetbrains:annotations:16.0.2'
 
+    runtime project(":DubboDemoService")
     runtime 'mysql:mysql-connector-java:8.0.11'
     providedRuntime "org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion"
 

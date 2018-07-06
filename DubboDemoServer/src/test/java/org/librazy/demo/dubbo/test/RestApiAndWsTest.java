@@ -104,7 +104,7 @@ class RestApiAndWsTest {
     @Rollback
     @SuppressWarnings("unchecked")
     void restApiAndWsTest() throws Exception {
-        final String email = "18912345678";
+        final String email = "a@b.com";
         final String password = "password";
         final String nick = "nick";
 
@@ -128,7 +128,28 @@ class RestApiAndWsTest {
         signupForm.setSalt(salt);
         signupForm.setVerifier(verifier);
         signupForm.setNick(nick);
-        signupForm.setCode(userSessionService.sendCode(email));
+        SrpChallengeForm challengeForm = new SrpChallengeForm();
+        challengeForm.setEmail(email);
+
+        ResponseEntity<Map> code = testRestTemplate.postForEntity("/code", challengeForm, Map.class);
+        assertNotNull(code.getBody());
+        assertEquals("ok", code.getBody().get("status"));
+        assertNotNull(code.getBody().get("mock"));
+        String mockCode = (String) code.getBody().get("mock");
+        signupForm.setCode(mockCode);
+
+        ResponseEntity<Map> codeReplay = testRestTemplate.postForEntity("/code", challengeForm, Map.class);
+        assertNotNull(codeReplay.getBody());
+        assertEquals("error", codeReplay.getBody().get("status"));
+        assertNull(codeReplay.getBody().get("mock"));
+
+        SrpChallengeForm invalidChallengeForm = new SrpChallengeForm();
+        invalidChallengeForm.setEmail("invalid email");
+        ResponseEntity<Map> codeInvalid = testRestTemplate.postForEntity("/code", invalidChallengeForm, Map.class);
+        assertNotNull(codeInvalid.getBody());
+        assertEquals("error", codeInvalid.getBody().get("status"));
+        assertNull(codeInvalid.getBody().get("mock"));
+
         ResponseEntity<Map> signup = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
         assertEquals(202, signup.getStatusCodeValue());
         Map<String, String> signupBody = signup.getBody();
@@ -250,5 +271,10 @@ class RestApiAndWsTest {
 
         ResponseEntity<Void> jwtReqSigninDeleted = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, signinJwt).build(), Void.class);
         assertEquals(401, jwtReqSigninDeleted.getStatusCodeValue());
+
+        ResponseEntity<Map> codeReplay2 = testRestTemplate.postForEntity("/code", challengeForm, Map.class);
+        assertNotNull(codeReplay2.getBody());
+        assertEquals("ok", codeReplay2.getBody().get("status"));
+        assertNull(codeReplay2.getBody().get("mock"));
     }
 }

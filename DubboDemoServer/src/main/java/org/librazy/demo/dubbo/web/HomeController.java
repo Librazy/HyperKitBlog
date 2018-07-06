@@ -102,6 +102,7 @@ public class HomeController {
         final UserEntity ud = userService.findByEmail(form.getEmail());
 
         if (ud != null) {
+            // WAI: Prevent spoofing whether one email is already registered
             result.put("status", "ok");
             return ResponseEntity.ok(result);
         }
