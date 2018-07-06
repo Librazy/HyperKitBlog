@@ -35,7 +35,7 @@ public class RedisLettuceConfig {
         return null;
     }
 
-    @Profile({"dev", "test-default"})
+    @Profile({"dev", "test-default", "test-mysql"})
     @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
     @Bean(destroyMethod = "stop")
     RedisServer redisServer() {
