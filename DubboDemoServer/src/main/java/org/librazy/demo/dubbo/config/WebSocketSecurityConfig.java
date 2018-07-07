@@ -71,8 +71,9 @@ public class WebSocketSecurityConfig
                     String authHeader = header != null ? header.get(0) : null;
                     if (authHeader != null && authHeader.startsWith(jwtConfigParams.tokenHead)) {
                         final String authToken = authHeader.substring(jwtConfigParams.tokenHead.length() + 1); // The part after "Bearer "
-                        if (checkToken(accessor, authToken)) return message;
-                    }
+                        checkToken(accessor, authToken);
+                        return message;
+                    } else throw new IllegalArgumentException();
                 } catch (Exception e) {
                     logger.warn("websocket auth failed with exception:", e);
                     StompHeaderAccessor disconnect = StompHeaderAccessor.create(StompCommand.DISCONNECT);
@@ -83,18 +84,13 @@ public class WebSocketSecurityConfig
             return message;
         }
 
-        private boolean checkToken(StompHeaderAccessor accessor, String authToken) {
+        private void checkToken(StompHeaderAccessor accessor, String authToken) {
             Claims claims = Jwts.claims(jwtTokenService.validateClaimsFromToken(authToken));
             String id = claims.getSubject();
-
-            if (id != null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(id);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                accessor.setUser(authentication);
-                return true;
-            }
-            return false;
+            UserDetails userDetails = userDetailsService.loadUserByUsername(id);
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            accessor.setUser(authentication);
         }
     }
 

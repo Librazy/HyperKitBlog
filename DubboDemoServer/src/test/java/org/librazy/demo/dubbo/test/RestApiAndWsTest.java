@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.config.JwtConfigParams;
-import org.librazy.demo.dubbo.config.RedisLettuceConfig;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.model.*;
 import org.librazy.demo.dubbo.service.UserService;
@@ -27,14 +26,12 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.messaging.simp.stomp.*;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.SocketUtils;
+import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -49,6 +46,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -237,6 +235,8 @@ class RestApiAndWsTest {
         ResponseEntity<Void> jwtReqReg = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, registerJwt).build(), Void.class);
         assertEquals(204, jwtReqReg.getStatusCodeValue());
 
+        assertNotNull(userSessionService.getUserAgent(registerBody.get("id"), signupSession.getSessionKey(true)));
+
         // delete sessions should invalid their requests but not the others
         userSessionService.deleteSession(registerBody.get("id"), signupSession.getSessionKey(true));
 
@@ -373,8 +373,56 @@ class RestApiAndWsTest {
     }
 
     @Test
-    void requestWithNonBearerAuthWill401(){
+    void requestWithNonBearerAuthWill401() {
         ResponseEntity<Void> req = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, "NotABearer").build(), Void.class);
         assertEquals(401, req.getStatusCodeValue());
+    }
+
+
+    @Test
+    void badWsConnectWithoutAuth() {
+        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+        StompHeaders headers = new StompHeaders();
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+        ListenableFuture<StompSession> connect = stompClient.connect("ws://localhost:" + port + "/stomp",
+                new WebSocketHttpHeaders(),
+                headers,
+                new StompSessionHandlerAdapter() {
+                });
+        ExecutionException exception = assertThrows(ExecutionException.class, connect::get);
+        assertEquals(ConnectionLostException.class, exception.getCause().getClass());
+    }
+
+    @Test
+    void badWsConnectWithBadAuth() {
+        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+        StompHeaders headers = new StompHeaders();
+        headers.put(jwtConfigParams.tokenHeader, Collections.singletonList(jwtConfigParams.tokenHead + "Ba.dTo.ken"));
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+        ListenableFuture<StompSession> connect = stompClient.connect("ws://localhost:" + port + "/stomp",
+                new WebSocketHttpHeaders(),
+                headers,
+                new StompSessionHandlerAdapter() {
+                });
+        ExecutionException exception = assertThrows(ExecutionException.class, connect::get);
+        assertEquals(ConnectionLostException.class, exception.getCause().getClass());
+    }
+
+    @Test
+    void signupWithoutCode() {
+        final String email = "a@b.com";
+        final String nick = "nick";
+
+        SrpSignupForm signupForm = new SrpSignupForm();
+        signupForm.setEmail(email);
+        signupForm.setSalt("some salt");
+        signupForm.setVerifier("some verifier");
+        signupForm.setNick(nick);
+        SrpChallengeForm challengeForm = new SrpChallengeForm();
+        challengeForm.setEmail(email);
+
+        signupForm.setCode("badcode");
+        ResponseEntity<Map> badSignup = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
+        assertEquals(409, badSignup.getStatusCodeValue());
     }
 }

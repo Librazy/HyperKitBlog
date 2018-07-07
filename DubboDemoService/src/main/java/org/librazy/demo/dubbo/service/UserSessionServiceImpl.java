@@ -140,10 +140,4 @@ public class UserSessionServiceImpl implements UserSessionService {
         String code = connection.sync().get(RedisUtils.code(email));
         return code != null && code.equals(req);
     }
-
-    @Override
-    public void close() {
-        connection.close();
-        connectionPubSub.close();
-    }
 }

@@ -3,7 +3,7 @@ package org.librazy.demo.dubbo.service;
 import java.io.Closeable;
 import java.util.Set;
 
-public interface UserSessionService extends Closeable {
+public interface UserSessionService {
     void newSession(String id, String sid, String ua, String key);
 
     String getKey(String id, String sid);
@@ -25,7 +25,4 @@ public interface UserSessionService extends Closeable {
     String sendCode(String email);
 
     boolean checkCode(String email, String req);
-
-    @Override
-    void close();
 }

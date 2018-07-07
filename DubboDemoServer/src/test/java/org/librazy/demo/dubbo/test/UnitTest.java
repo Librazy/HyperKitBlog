@@ -47,7 +47,7 @@ class UnitTest {
     JwtTokenService jwtTokenService;
 
     @Autowired
-    SrpConfigParams params;
+    SrpConfigParams srpConfigParams;
 
     @Autowired(required = false)
     @Reference
@@ -136,5 +136,4 @@ class UnitTest {
         constructor.setAccessible(true);
         assertThrows(InvocationTargetException.class, constructor::newInstance);
     }
-
 }
