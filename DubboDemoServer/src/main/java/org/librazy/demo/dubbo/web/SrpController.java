@@ -116,8 +116,8 @@ public class SrpController {
 
     @PostMapping(value = "register", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> register(
-            @Valid @RequestBody SrpRegisterForm srpRegisterForm,
             @RequestHeader("User-Agent") String userAgent,
+            @Valid @RequestBody SrpRegisterForm srpRegisterForm,
             Errors errors) {
         Map<String, String> body = new HashMap<>();
         if (errors.hasErrors()) {

@@ -143,7 +143,6 @@ class RestApiAndWsTest {
         assertEquals("ok", code.getBody().get("status"));
         assertNotNull(code.getBody().get("mock"));
         String mockCode = (String) code.getBody().get("mock");
-        signupForm.setCode(mockCode);
 
         ResponseEntity<Map> codeReplay = testRestTemplate.postForEntity("/code", challengeForm, Map.class);
         assertNotNull(codeReplay.getBody());
@@ -157,6 +156,11 @@ class RestApiAndWsTest {
         assertEquals("error", codeInvalid.getBody().get("status"));
         assertNull(codeInvalid.getBody().get("mock"));
 
+        signupForm.setCode("badcode");
+        ResponseEntity<Map> badSignup = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
+        assertEquals(409, badSignup.getStatusCodeValue());
+
+        signupForm.setCode(mockCode);
         ResponseEntity<Map> signup = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
         assertEquals(202, signup.getStatusCodeValue());
         Map<String, String> signupBody = signup.getBody();
