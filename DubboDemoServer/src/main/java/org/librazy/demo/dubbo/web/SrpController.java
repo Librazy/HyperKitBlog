@@ -34,7 +34,7 @@ import java.util.Map;
 
 @RestController
 public class SrpController {
-    
+
     private static final String STATUS = "status";
 
     private static final String OK = "ok";
@@ -159,11 +159,20 @@ public class SrpController {
      */
     @PostMapping(value = "challenge", produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    ResponseEntity<Map<String, String>> challenge(@Valid @RequestBody SrpChallengeForm challengeForm) {
+    ResponseEntity<Map<String, String>> challenge(
+            @Valid @RequestBody SrpChallengeForm challengeForm,
+            Errors errors) {
+        Map<String, String> body = new HashMap<>();
+
+        if (errors.hasErrors()) {
+            body.put(STATUS, ERROR);
+            body.put(MSG, errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
+            return ResponseEntity.badRequest().body(body);
+        }
+
         final String fakeSalt = hash(config.saltOfFakeSalt + challengeForm.getEmail());
         final SrpAccountEntity realAccount = userService.getSrpAccount(challengeForm.getEmail());
 
-        Map<String, String> body = new HashMap<>();
 
         if (realAccount != null) {
             session.newSession(config.n, config.g);

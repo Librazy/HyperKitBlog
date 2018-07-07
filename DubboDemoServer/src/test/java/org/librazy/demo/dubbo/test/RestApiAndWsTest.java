@@ -279,7 +279,7 @@ class RestApiAndWsTest {
 
             @Override
             public void handleFrame(@NotNull StompHeaders headers, Object payload) {
-                ChatMessage chatMessage = (ChatMessage)payload;
+                ChatMessage chatMessage = (ChatMessage) payload;
                 assertEquals("Content", chatMessage.getContent());
                 messageReceived[0] = true;
             }
@@ -331,7 +331,36 @@ class RestApiAndWsTest {
         SrpSigninForm srpSigninForm = new SrpSigninForm();
         srpSigninForm.setPassword("invalid");
         srpSigninForm.setEmail(email);
-        ResponseEntity<Map> challenge = testRestTemplate.postForEntity("/authenticate", srpSigninForm, Map.class);
-        assertEquals(401, challenge.getStatusCodeValue());
+        ResponseEntity<Map> authenticate = testRestTemplate.postForEntity("/authenticate", srpSigninForm, Map.class);
+        assertEquals(401, authenticate.getStatusCodeValue());
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void invalidRequestShould400() {
+        ResponseEntity<Map> signup = testRestTemplate.postForEntity("/signup", new BadRequestEntity(), Map.class);
+        assertEquals(400, signup.getStatusCodeValue());
+
+        ResponseEntity<Map> register = testRestTemplate.postForEntity("/register", new BadRequestEntity(), Map.class);
+        assertEquals(400, register.getStatusCodeValue());
+
+        ResponseEntity<Map> challenge = testRestTemplate.postForEntity("/challenge", new BadRequestEntity(), Map.class);
+        assertEquals(400, challenge.getStatusCodeValue());
+
+        ResponseEntity<Map> authenticate = testRestTemplate.postForEntity("/authenticate", new BadRequestEntity(), Map.class);
+        assertEquals(400, authenticate.getStatusCodeValue());
+    }
+
+    class BadRequestEntity {
+        private String bad;
+
+        public String getBad() {
+            return bad;
+        }
+
+        public void setBad(String bad) {
+            this.bad = bad;
+        }
     }
 }
