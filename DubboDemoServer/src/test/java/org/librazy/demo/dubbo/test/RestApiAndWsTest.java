@@ -366,4 +366,10 @@ class RestApiAndWsTest {
             this.bad = bad;
         }
     }
+
+    @Test
+    void requestWithNonBearerAuthWill401(){
+        ResponseEntity<Void> req = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, "NotABearer").build(), Void.class);
+        assertEquals(401, req.getStatusCodeValue());
+    }
 }

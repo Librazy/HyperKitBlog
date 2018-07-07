@@ -53,18 +53,15 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
                 Claims claims = Jwts.claims(jwtTokenService.validateClaimsFromToken(authToken));
                 String id = claims.getSubject();
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(id);
 
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(
+                        request));
+                logger.info("authenticated user id " + id + " , setting security context");
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(id);
-
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(
-                            request));
-                    logger.info("authenticated user id " + id + " , setting security context");
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
             }
         } catch (Exception e) {
             logger.warn("auth failed with exception:", e);
