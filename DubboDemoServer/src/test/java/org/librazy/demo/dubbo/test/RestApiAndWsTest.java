@@ -175,6 +175,9 @@ class RestApiAndWsTest {
         assertTrue(registerForm.getId() < 0);
         registerForm.setPassword(signupSession.getClientEvidenceMessage() + ":" + signupSession.getPublicClientValue());
 
+        ResponseEntity<Map> signupReplay = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
+        assertEquals(400, signupReplay.getStatusCodeValue());
+
         // a anonymous request fails with 401
         ResponseEntity<Void> mustFail401 = testRestTemplate.getForEntity("/204", Void.class);
         assertEquals(401, mustFail401.getStatusCodeValue());

@@ -20,8 +20,8 @@ import org.springframework.util.SocketUtils;
 import javax.transaction.Transactional;
 import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -72,5 +72,15 @@ class JpaTest {
 
         assertNotNull(JpaCryptoConverter.getAlgorithm());
         assertNotNull(JpaCryptoConverter.getKey());
+    }
+
+    @Test
+    void JpaCryptoConverterTest() {
+        JpaCryptoConverter jpaCryptoConverter = new JpaCryptoConverter();
+        String ciphertext = jpaCryptoConverter.convertToDatabaseColumn("sensitive");
+        String plain = jpaCryptoConverter.convertToEntityAttribute(ciphertext);
+        assertEquals("sensitive", plain);
+        assertThrows(IllegalStateException.class, () -> jpaCryptoConverter.convertToDatabaseColumn(null));
+        assertThrows(IllegalStateException.class, () -> jpaCryptoConverter.convertToEntityAttribute("random"));
     }
 }

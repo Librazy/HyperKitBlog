@@ -18,6 +18,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -124,6 +127,14 @@ class UnitTest {
         assertThrows(IllegalStateException.class, () -> srp.loadSession(114514));
         connection.sync().set(RedisUtils.srpSession(String.valueOf(114514)), "rO0ABXNyAB1vcmcubGlicmF6eS5kZW1vLmR1YmJvLnRlc3QuQ2kuRc/8wB/EAgAAeHA=");
         assertThrows(IllegalStateException.class, () -> srp.loadSession(114514));
+    }
+
+    @Test
+    void redisUtilsIsNotInstantiatable() throws NoSuchMethodException {
+        Constructor<RedisUtils> constructor = RedisUtils.class.getDeclaredConstructor();
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        constructor.setAccessible(true);
+        assertThrows(InvocationTargetException.class, constructor::newInstance);
     }
 
 }
