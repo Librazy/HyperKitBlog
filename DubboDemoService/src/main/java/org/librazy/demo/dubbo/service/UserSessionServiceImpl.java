@@ -117,7 +117,7 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Override
     public boolean validNonce(String nonce) {
         return connection.async().set(RedisUtils.nonce(nonce), "", new SetArgs().nx().ex(20)).toCompletableFuture().thenApply(
-                result -> result.equals(OK)
+                OK::equals
         ).join();
     }
 

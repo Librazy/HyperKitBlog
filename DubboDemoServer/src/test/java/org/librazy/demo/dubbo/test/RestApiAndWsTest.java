@@ -249,16 +249,37 @@ class RestApiAndWsTest {
 
         JwtRefreshForm refreshForm = new JwtRefreshForm();
         refreshForm.setTimestamp(new Date().getTime());
-        refreshForm.setNonce(UUID.randomUUID().toString());
 
+        refreshForm.setSign("badsign");
+        ResponseEntity<Map> refreshBadSign = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
+        assertEquals(400, refreshBadSign.getStatusCodeValue());
+
+        refreshForm.setNonce(UUID.randomUUID().toString());
+        Cipher cipherbad = Cipher.getInstance("AES/GCM/NoPadding");
+        cipherbad.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
+        String plainbad = refreshForm.getNonce() + String.valueOf(refreshForm.getTimestamp());
+        String signbad = Base64.getEncoder().encodeToString(cipherbad.doFinal(plainbad.getBytes()));
+        refreshForm.setSign(signbad);
+        ResponseEntity<Map> refreshbad = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
+        assertEquals(401, refreshbad.getStatusCodeValue());
+
+        Cipher cipherreused = Cipher.getInstance("AES/GCM/NoPadding");
+        cipherreused.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
+        String plainreused = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
+        String signreused = Base64.getEncoder().encodeToString(cipherreused.doFinal(plainreused.getBytes()));
+        refreshForm.setSign(signreused);
+        ResponseEntity<Map> refreshreused = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
+        assertEquals(401, refreshreused.getStatusCodeValue());
+
+        refreshForm.setNonce(UUID.randomUUID().toString());
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
         String plain = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
         String sign = Base64.getEncoder().encodeToString(cipher.doFinal(plain.getBytes()));
         refreshForm.setSign(sign);
         ResponseEntity<Map> refresh = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
-
         assertEquals(200, refresh.getStatusCodeValue());
+
         Map<String, String> refreshBody = refresh.getBody();
         assertNotNull(refreshBody);
         assertNotNull(refreshBody.get("jwt"));

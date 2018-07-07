@@ -3,6 +3,7 @@ package org.librazy.demo.dubbo.model;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Date;
 
 public class JwtRefreshForm implements Serializable {
 
@@ -12,7 +13,7 @@ public class JwtRefreshForm implements Serializable {
     private String sign;
 
     @NotNull
-    private Long timestamp;
+    private Long timestamp = new Date().getTime();
 
     @NotBlank
     private String nonce;
