@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import redis.embedded.RedisServer;
 
@@ -30,19 +29,9 @@ public class RedisLettuceConfig {
     @Value("${redis.password}")
     protected String password;
 
-
-    @Profile({"default"})
-    @SuppressWarnings("SameReturnValue")
-    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
-    @Bean()
-    RedisServer redisServerNop() {
-        return null;
-    }
-
-    @Profile({"dev", "test-default", "test-mysql"})
     @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
     @Bean(destroyMethod = "stop")
-    RedisServer redisServer() {
+    public RedisServer redisServer() {
         RedisServer redisServer = RedisServer.builder().port(port).setting("maxmemory 128M").setting("bind 127.0.0.1").build();
         logger.info("embedded redis server starting");
         try {

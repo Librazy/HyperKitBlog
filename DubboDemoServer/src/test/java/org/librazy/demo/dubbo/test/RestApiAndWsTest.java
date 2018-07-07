@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.config.JwtConfigParams;
+import org.librazy.demo.dubbo.config.RedisLettuceConfig;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.model.*;
 import org.librazy.demo.dubbo.service.UserService;
@@ -69,6 +70,8 @@ class RestApiAndWsTest {
     private TestRestTemplate testRestTemplate;
     @Autowired
     private SrpConfigParams config;
+    @Autowired
+    private RedisLettuceConfig redis;
     @Autowired
     private StatefulRedisConnection<String, String> connection;
     @Autowired(required = false)

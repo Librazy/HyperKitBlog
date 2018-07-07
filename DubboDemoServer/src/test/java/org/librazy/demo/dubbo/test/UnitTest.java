@@ -15,6 +15,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,9 +34,16 @@ class UnitTest {
     JwtTokenService jwtTokenService;
 
     @Test
-    void jwtTokenServiceTest() {
+    void jwtTokenServiceTest() throws InterruptedException {
         long expMs = jwtTokenService.getExpiration() * 1000;
         long maxR = jwtTokenService.getMaximumRefresh();
+
+        jwtTokenService.setClock(null);
+        long clock1 = jwtTokenService.getClock();
+        TimeUnit.SECONDS.sleep(1);
+        long clock2 = jwtTokenService.getClock();
+        assertNotEquals(clock1, clock2);
+
         long now = new Date().getTime();
         jwtTokenService.setClock(now);
         session.newSession("1", "session.id", "userAgent", "session.key");
@@ -84,6 +92,5 @@ class UnitTest {
         jwtTokenService.setClock(now + time);
         String finalToken = refreshNToken;
         assertThrows(RuntimeException.class, () -> jwtTokenService.validateClaimsFromToken(finalToken));
-
     }
 }
