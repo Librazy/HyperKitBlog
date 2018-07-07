@@ -2,6 +2,8 @@ package org.librazy.demo.dubbo.test;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SigningKeyResolver;
+import io.jsonwebtoken.UnsupportedJwtException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.domain.UserEntity;
@@ -32,6 +34,11 @@ class UnitTest {
     @Autowired(required = false)
     @Reference
     JwtTokenService jwtTokenService;
+
+
+    @Autowired(required = false)
+    @Reference
+    SigningKeyResolver jwtKeyResolverService;
 
     @Test
     void jwtTokenServiceTest() throws InterruptedException {
@@ -92,5 +99,10 @@ class UnitTest {
         jwtTokenService.setClock(now + time);
         String finalToken = refreshNToken;
         assertThrows(RuntimeException.class, () -> jwtTokenService.validateClaimsFromToken(finalToken));
+    }
+
+    @Test
+    void jwtKeyResolverServiceTest() {
+        assertThrows(UnsupportedJwtException.class, () -> jwtKeyResolverService.resolveSigningKey(Jwts.jwsHeader().setAlgorithm("HS256"), Jwts.claims()));
     }
 }
