@@ -1,13 +1,17 @@
 package org.librazy.demo.dubbo.test;
 
 import com.alibaba.dubbo.config.annotation.Reference;
+import com.lambdaworks.redis.api.StatefulRedisConnection;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SigningKeyResolver;
 import io.jsonwebtoken.UnsupportedJwtException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.librazy.demo.dubbo.config.RedisUtils;
+import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.service.JwtTokenService;
+import org.librazy.demo.dubbo.service.SrpSessionService;
 import org.librazy.demo.dubbo.service.UserSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,12 +37,21 @@ class UnitTest {
 
     @Autowired(required = false)
     @Reference
+    SrpSessionService srp;
+
+    @Autowired(required = false)
+    @Reference
     JwtTokenService jwtTokenService;
 
+    @Autowired
+    SrpConfigParams params;
 
     @Autowired(required = false)
     @Reference
     SigningKeyResolver jwtKeyResolverService;
+
+    @Autowired
+    private StatefulRedisConnection<String, String> connection;
 
     @Test
     void jwtTokenServiceTest() throws InterruptedException {
@@ -105,4 +118,12 @@ class UnitTest {
     void jwtKeyResolverServiceTest() {
         assertThrows(UnsupportedJwtException.class, () -> jwtKeyResolverService.resolveSigningKey(Jwts.jwsHeader().setAlgorithm("HS256"), Jwts.claims()));
     }
+
+    @Test
+    void srpSessionTest() {
+        assertThrows(IllegalStateException.class, () -> srp.loadSession(114514));
+        connection.sync().set(RedisUtils.srpSession(String.valueOf(114514)), "rO0ABXNyAB1vcmcubGlicmF6eS5kZW1vLmR1YmJvLnRlc3QuQ2kuRc/8wB/EAgAAeHA=");
+        assertThrows(IllegalStateException.class, () -> srp.loadSession(114514));
+    }
+
 }

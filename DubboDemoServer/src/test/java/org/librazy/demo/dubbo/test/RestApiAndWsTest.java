@@ -71,8 +71,6 @@ class RestApiAndWsTest {
     @Autowired
     private SrpConfigParams config;
     @Autowired
-    private RedisLettuceConfig redis;
-    @Autowired
     private StatefulRedisConnection<String, String> connection;
     @Autowired(required = false)
     @Reference
