@@ -115,6 +115,7 @@ public class WebSocketSecurityConfig
         messages.simpTypeMatchers(SimpMessageType.CONNECT).permitAll()
                 .nullDestMatcher().authenticated()
                 .simpDestMatchers("/topic/broadcast").hasRole("USER")
+                .simpDestMatchers("/app/**").hasRole("USER")
                 .anyMessage().denyAll();
 
     }

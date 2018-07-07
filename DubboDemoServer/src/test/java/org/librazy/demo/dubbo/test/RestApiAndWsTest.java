@@ -6,6 +6,7 @@ import com.bitbucket.thinbus.srp6.js.SRP6JavaClientSessionSHA256;
 import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
 import org.h2.tools.Server;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
@@ -40,11 +42,13 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.transaction.Transactional;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -265,8 +269,24 @@ class RestApiAndWsTest {
                         headers,
                         new StompSessionHandlerAdapter() {
                         }).get();
-        stompSession.send("/app/broadcast", new ChatMessage().setMid(1L));
+        final boolean[] messageReceived = {false};
+        stompSession.subscribe("/topic/broadcast", new StompFrameHandler() {
+            @NotNull
+            @Override
+            public Type getPayloadType(@NotNull StompHeaders headers) {
+                return ChatMessage.class;
+            }
 
+            @Override
+            public void handleFrame(@NotNull StompHeaders headers, Object payload) {
+                ChatMessage chatMessage = (ChatMessage)payload;
+                assertEquals("Content", chatMessage.getContent());
+                messageReceived[0] = true;
+            }
+        });
+        stompSession.send("/app/broadcast", new ChatMessage().setMid(1L).setContent("Content"));
+        TimeUnit.SECONDS.sleep(1);
+        assertTrue(messageReceived[0]);
         userSessionService.clearSession(registerBody.get("id"));
 
         ResponseEntity<Void> jwtReqSigninDeleted = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, signinJwt).build(), Void.class);
@@ -276,5 +296,42 @@ class RestApiAndWsTest {
         assertNotNull(codeReplay2.getBody());
         assertEquals("ok", codeReplay2.getBody().get("status"));
         assertNull(codeReplay2.getBody().get("mock"));
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void fakeAccountCanChallenge() {
+        String email = "someone@notexist.com";
+        SrpChallengeForm srpChallengeForm = new SrpChallengeForm();
+        srpChallengeForm.setEmail(email);
+
+        ResponseEntity<Map> challenge = testRestTemplate.postForEntity("/challenge", srpChallengeForm, Map.class);
+        assertEquals(200, challenge.getStatusCodeValue());
+        assertNotNull(challenge.getBody());
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void fakeAccountCannotAuthenticate() {
+        String email = "someone@notexist.com";
+        SrpSigninForm srpSigninForm = new SrpSigninForm();
+        srpSigninForm.setPassword("somea:somem1");
+        srpSigninForm.setEmail(email);
+        ResponseEntity<Map> challenge = testRestTemplate.postForEntity("/authenticate", srpSigninForm, Map.class);
+        assertEquals(401, challenge.getStatusCodeValue());
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void invalidPasswordCannotAuthenticate() {
+        String email = "someone@notexist.com";
+        SrpSigninForm srpSigninForm = new SrpSigninForm();
+        srpSigninForm.setPassword("invalid");
+        srpSigninForm.setEmail(email);
+        ResponseEntity<Map> challenge = testRestTemplate.postForEntity("/authenticate", srpSigninForm, Map.class);
+        assertEquals(401, challenge.getStatusCodeValue());
     }
 }
