@@ -10,7 +10,6 @@ import javax.persistence.Converter;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Base64;
-import java.util.Properties;
 
 /**
  * Encrypts a database column with a secret key. The key should only be know to
@@ -19,27 +18,33 @@ import java.util.Properties;
 @Converter
 public class JpaCryptoConverter implements AttributeConverter<String, String> {
 
-    private static final String ALGORITHM;
-    private static final byte[] KEY;
+    private static String algorithm;
+
+    private static byte[] key;
+
     private static Logger logger = LoggerFactory.getLogger(JpaCryptoConverter.class);
 
-    static {
-        try {
-            Properties properties = new Properties();
-            properties.load(JpaCryptoConverter.class.getClassLoader()
-                                                    .getResourceAsStream("application.properties"));
-            ALGORITHM = (String) properties.get("encryption.algorithm");
-            KEY = ((String) properties.get("encryption.key")).getBytes();
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
-        }
+    public static String getAlgorithm() {
+        return algorithm;
+    }
+
+    public static void setAlgorithm(String algorithm) {
+        JpaCryptoConverter.algorithm = algorithm;
+    }
+
+    public static byte[] getKey() {
+        return key;
+    }
+
+    public static void setKey(byte[] key) {
+        JpaCryptoConverter.key = key;
     }
 
     @Override
     public String convertToDatabaseColumn(String sensitive) {
-        Key keySpec = new SecretKeySpec(JpaCryptoConverter.KEY, "AES");
+        Key keySpec = new SecretKeySpec(JpaCryptoConverter.key, "AES");
         try {
-            final Cipher c = Cipher.getInstance(JpaCryptoConverter.ALGORITHM);
+            final Cipher c = Cipher.getInstance(JpaCryptoConverter.algorithm);
             c.init(Cipher.ENCRYPT_MODE, keySpec);
             return new String(Base64.getEncoder().encode(c.doFinal(sensitive.getBytes())), StandardCharsets.UTF_8);
         } catch (Exception e) {
@@ -50,9 +55,9 @@ public class JpaCryptoConverter implements AttributeConverter<String, String> {
 
     @Override
     public String convertToEntityAttribute(String sensitive) {
-        Key keySpec = new SecretKeySpec(JpaCryptoConverter.KEY, "AES");
+        Key keySpec = new SecretKeySpec(JpaCryptoConverter.key, "AES");
         try {
-            final Cipher c = Cipher.getInstance(JpaCryptoConverter.ALGORITHM);
+            final Cipher c = Cipher.getInstance(JpaCryptoConverter.algorithm);
             c.init(Cipher.DECRYPT_MODE, keySpec);
             return new String(c.doFinal(Base64.getDecoder()
                                               .decode(sensitive.getBytes(StandardCharsets.UTF_8))));

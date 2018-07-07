@@ -3,6 +3,7 @@ package org.librazy.demo.dubbo.test;
 import org.h2.tools.Server;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.librazy.demo.dubbo.config.JpaCryptoConverter;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.domain.repo.SrpAccountRepository;
@@ -20,6 +21,7 @@ import javax.transaction.Transactional;
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -67,5 +69,8 @@ class JpaTest {
 
         UserEntity userWithSameEmail = new UserEntity("18899999999", "user 3");
         Assertions.assertThrows(DataIntegrityViolationException.class, () -> userRepository.save(userWithSameEmail));
+
+        assertNotNull(JpaCryptoConverter.getAlgorithm());
+        assertNotNull(JpaCryptoConverter.getKey());
     }
 }
