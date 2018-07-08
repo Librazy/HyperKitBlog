@@ -4,6 +4,7 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.librazy.demo.dubbo.config.JwtConfigParams;
+import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.JwtRefreshForm;
 import org.librazy.demo.dubbo.model.SrpChallengeForm;
@@ -54,14 +55,6 @@ public class HomeController {
         this.userSessionService = userSessionService;
     }
 
-    private static MessageDigest sha512() {
-        try {
-            return MessageDigest.getInstance("SHA-512");
-        } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError("not possible in jdk1.7 and 1.8: ", e);
-        }
-    }
-
     @GetMapping("204")
     public ResponseEntity<Void> noContent() {
         return ResponseEntity.noContent().build();
@@ -76,7 +69,7 @@ public class HomeController {
         Map<String, String> result = new HashMap<>();
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, form.getNonce().getBytes()));
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, form.getNonce().getBytes()));
             String expected = form.getNonce() + " " + form.getTimestamp();
             boolean nonceValid = userSessionService.validNonce(form.getNonce());
             String actual = new String(cipher.doFinal(Base64.getDecoder().decode(form.getSign())));

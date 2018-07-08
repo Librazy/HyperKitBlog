@@ -8,6 +8,7 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.config.RedisUtils;
+import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.service.JwtTokenService;
@@ -134,11 +135,16 @@ class UnitTest {
     }
 
     @Test
-    void redisUtilsIsNotInstantiatable() throws NoSuchMethodException {
-        Constructor<RedisUtils> constructor = RedisUtils.class.getDeclaredConstructor();
-        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
-        constructor.setAccessible(true);
-        assertThrows(InvocationTargetException.class, constructor::newInstance);
+    void utilsIsNotInstantiatable() throws NoSuchMethodException {
+        Constructor<RedisUtils> redisUtilsConstructor = RedisUtils.class.getDeclaredConstructor();
+        assertTrue(Modifier.isPrivate(redisUtilsConstructor.getModifiers()));
+        redisUtilsConstructor.setAccessible(true);
+        assertThrows(InvocationTargetException.class, redisUtilsConstructor::newInstance);
+
+        Constructor<SecurityInstanceUtils> securityInstanceUtilsConstructor = SecurityInstanceUtils.class.getDeclaredConstructor();
+        assertTrue(Modifier.isPrivate(securityInstanceUtilsConstructor.getModifiers()));
+        securityInstanceUtilsConstructor.setAccessible(true);
+        assertThrows(InvocationTargetException.class, securityInstanceUtilsConstructor::newInstance);
     }
 
     @Test

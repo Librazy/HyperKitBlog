@@ -5,6 +5,7 @@ import com.bitbucket.thinbus.srp6.js.HexHashedRoutines;
 import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSession;
 import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
 import com.nimbusds.srp6.BigIntegerUtils;
+import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
@@ -27,8 +28,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,8 +48,6 @@ public class SrpController {
 
     private final UserService userService;
 
-    private final MessageDigest md = sha256();
-
     @Reference
     private JwtTokenService jwtTokenService;
 
@@ -70,14 +67,6 @@ public class SrpController {
         this.userSessionService = userSessionService;
     }
 
-    private static MessageDigest sha256() {
-        try {
-            return MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError("not possible in jdk1.7 and 1.8: ", e);
-        }
-    }
-
     @PostMapping(value = "signup", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> signup(
             @Valid @RequestBody SrpSignupForm signupForm,
@@ -95,7 +84,7 @@ public class SrpController {
             return ResponseEntity.status(409).body(body);
         }
         try {
-            long fakeid = -Math.abs(BigIntegerUtils.bigIntegerFromBytes(md.digest(signupForm.getEmail().getBytes())).longValue());
+            long fakeid = -Math.abs(BigIntegerUtils.bigIntegerFromBytes(SecurityInstanceUtils.getSha256().digest(signupForm.getEmail().getBytes())).longValue());
             UserEntity user = new UserEntity(fakeid, signupForm.getEmail());
             SrpAccountEntity account = new SrpAccountEntity(user, signupForm.getSalt(), signupForm.getVerifier());
             session.newSession(config.n, config.g);
@@ -181,17 +170,13 @@ public class SrpController {
             body.put("b", b);
             return ResponseEntity.ok(body);
         } else {
-            try {
-                final SrpAccountEntity fakeAccount = new SrpAccountEntity(new UserEntity(SecureRandom.getInstanceStrong().nextLong(), challengeForm.getEmail()), fakeSalt);
-                final SRP6JavascriptServerSession fakeSession = new SRP6JavascriptServerSessionSHA256(
-                        config.n, config.g);
-                String b = fakeSession.step1(fakeAccount.getUser().getEmail(), fakeSalt, "0");
-                body.put("salt", fakeSalt);
-                body.put("b", b);
-                return ResponseEntity.ok(body);
-            } catch (NoSuchAlgorithmException e) {
-                throw new IllegalStateException(e);
-            }
+            final SrpAccountEntity fakeAccount = new SrpAccountEntity(new UserEntity(SecurityInstanceUtils.getStrongRandom().nextLong(), challengeForm.getEmail()), fakeSalt);
+            final SRP6JavascriptServerSession fakeSession = new SRP6JavascriptServerSessionSHA256(
+                    config.n, config.g);
+            String b = fakeSession.step1(fakeAccount.getUser().getEmail(), fakeSalt, "0");
+            body.put("salt", fakeSalt);
+            body.put("b", b);
+            return ResponseEntity.ok(body);
         }
     }
 
@@ -237,6 +222,7 @@ public class SrpController {
     }
 
     private String hash(String value) {
+        MessageDigest md = SecurityInstanceUtils.getSha256();
         md.update(value.getBytes(StandardCharsets.UTF_8));
         return HexHashedRoutines.toHexString(md.digest());
     }

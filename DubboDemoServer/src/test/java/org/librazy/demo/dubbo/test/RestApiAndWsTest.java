@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.config.JwtConfigParams;
+import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
@@ -44,8 +45,6 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.transaction.Transactional;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -78,15 +77,6 @@ class RestApiAndWsTest {
     @Autowired(required = false)
     @Reference
     private SrpSessionService srpSessionService;
-
-    private static MessageDigest sha512() {
-        try {
-            return MessageDigest.getInstance("SHA-512");
-        } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError("not possible in jdk1.7 and 1.8: ", e);
-        }
-    }
-
 
     @BeforeAll
     static void startH2Console() throws SQLException {
@@ -257,7 +247,7 @@ class RestApiAndWsTest {
 
         refreshForm.setNonce(UUID.randomUUID().toString());
         Cipher cipherbad = Cipher.getInstance("AES/GCM/NoPadding");
-        cipherbad.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
+        cipherbad.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
         String plainbad = refreshForm.getNonce() + String.valueOf(refreshForm.getTimestamp());
         String signbad = Base64.getEncoder().encodeToString(cipherbad.doFinal(plainbad.getBytes()));
         refreshForm.setSign(signbad);
@@ -265,7 +255,7 @@ class RestApiAndWsTest {
         assertEquals(401, refreshbad.getStatusCodeValue());
 
         Cipher cipherreused = Cipher.getInstance("AES/GCM/NoPadding");
-        cipherreused.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
+        cipherreused.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
         String plainreused = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
         String signreused = Base64.getEncoder().encodeToString(cipherreused.doFinal(plainreused.getBytes()));
         refreshForm.setSign(signreused);
@@ -274,7 +264,7 @@ class RestApiAndWsTest {
 
         refreshForm.setNonce(UUID.randomUUID().toString());
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(sha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
+        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
         String plain = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
         String sign = Base64.getEncoder().encodeToString(cipher.doFinal(plain.getBytes()));
         refreshForm.setSign(sign);

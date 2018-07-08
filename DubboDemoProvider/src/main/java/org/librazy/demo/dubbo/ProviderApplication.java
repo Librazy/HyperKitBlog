@@ -1,11 +1,17 @@
 package org.librazy.demo.dubbo;
 
 import com.alibaba.dubbo.spring.boot.annotation.EnableDubboConfiguration;
+import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 /**
  * Spring Boot 入口类
@@ -14,6 +20,17 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableTransactionManagement
 public class ProviderApplication extends SpringBootServletInitializer {
+
+    private static Logger log = LoggerFactory.getLogger(ProviderApplication.class);
+
+    static {
+        try {
+            SecurityInstanceUtils.setStrongRandom(SecureRandom.getInstanceStrong());
+        } catch (NoSuchAlgorithmException e) {
+            log.error("No secure random support available, ", e);
+            Runtime.getRuntime().exit(1);
+        }
+    }
 
     /**
      * 标准Jar入口点
