@@ -12,9 +12,11 @@ import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.librazy.demo.dubbo.service.SrpSessionService;
+import org.librazy.demo.dubbo.service.UserService;
 import org.librazy.demo.dubbo.service.UserSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -48,6 +50,9 @@ class UnitTest {
 
     @Autowired
     SrpConfigParams srpConfigParams;
+
+    @Autowired
+    UserService userService;
 
     @Autowired(required = false)
     @Reference
@@ -94,7 +99,6 @@ class UnitTest {
         assertThrows(RuntimeException.class, () -> jwtTokenService.validateClaimsFromToken(token));
         jwtTokenService.validateClaimsFromToken(refresh1Token);
 
-
         // Refresh the token...
         long time = expMs - 1000;
         String refreshNToken = refresh1Token;
@@ -135,5 +139,10 @@ class UnitTest {
         assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
         assertThrows(InvocationTargetException.class, constructor::newInstance);
+    }
+
+    @Test
+    void loadNonExistUserWillNotFound() {
+        assertThrows(UsernameNotFoundException.class, () -> userService.loadUserByUsername("114514"));
     }
 }
