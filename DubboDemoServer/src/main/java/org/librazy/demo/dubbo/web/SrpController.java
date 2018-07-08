@@ -78,7 +78,14 @@ public class SrpController {
             return ResponseEntity.badRequest().body(body);
         }
         // never tell user if a email is registered or not
-        if (userService.findByEmail(signupForm.getEmail()) != null || !userSessionService.checkCode(signupForm.getEmail(), signupForm.getCode())) {
+        if (userService.findByEmail(signupForm.getEmail()) != null){
+            logger.warn("try to sign up a email {} that already registered.", signupForm.getEmail());
+            body.put(STATUS, ERROR);
+            body.put(MSG, "code;");
+            return ResponseEntity.status(409).body(body);
+        }
+        if (!userSessionService.checkCode(signupForm.getEmail(), signupForm.getCode())) {
+            logger.warn("email {} code mismatch.", signupForm.getEmail());
             body.put(STATUS, ERROR);
             body.put(MSG, "code;");
             return ResponseEntity.status(409).body(body);

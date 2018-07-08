@@ -246,7 +246,7 @@ class RestApiAndWsTest {
 
 
         JwtRefreshForm refreshForm = new JwtRefreshForm();
-        refreshForm.setTimestamp(new Date().getTime());
+        refreshForm.setTimestamp(jwtTokenService.getClock());
 
         refreshForm.setSign("badsign");
         ResponseEntity<Map> refreshBadSign = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
@@ -270,9 +270,10 @@ class RestApiAndWsTest {
         assertEquals(401, refreshreused.getStatusCodeValue());
 
         refreshForm.setNonce(UUID.randomUUID().toString());
+        refreshForm.setTimestamp(jwtTokenService.getClock() - 30000);
         Cipher cipherbt = Cipher.getInstance("AES/GCM/NoPadding");
         cipherbt.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
-        String plainbt = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp() - 20000);
+        String plainbt = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
         String signbt = Base64.getEncoder().encodeToString(cipherbt.doFinal(plainbt.getBytes()));
         refreshForm.setSign(signbt);
         ResponseEntity<Map> refreshbt = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
@@ -282,6 +283,7 @@ class RestApiAndWsTest {
         long oldMr = jwtTokenService.getMaximumRefresh();
         jwtTokenService.setMaximumRefresh(0);
 
+        refreshForm.setTimestamp(jwtTokenService.getClock());
         refreshForm.setNonce(UUID.randomUUID().toString());
         Cipher ciphermr = Cipher.getInstance("AES/GCM/NoPadding");
         ciphermr.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));

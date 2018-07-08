@@ -64,37 +64,32 @@ public class HomeController {
     }
 
     @PostMapping("refresh")
-    public ResponseEntity<Map<String, String>> refresh(@Valid @RequestBody JwtRefreshForm form, @RequestHeader("Authorization") String auth, Principal sender) {
+    public ResponseEntity<Map<String, String>> refresh(@Valid @RequestBody JwtRefreshForm form, @RequestHeader("Authorization") String auth, Principal sender) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         String jwt = auth.substring(jwtConfigParams.tokenHead.length() + 1);
         Claims claims = Jwts.claims(jwtTokenService.validateClaimsFromToken(jwt));
         String sid = (String) claims.get("jti");
         String key = userSessionService.getKey(sender.getName(), sid);
         Map<String, String> result = new HashMap<>();
-        try {
-            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, form.getNonce().getBytes()));
-            String expected = form.getNonce() + " " + form.getTimestamp();
-            boolean nonceValid = userSessionService.validNonce(form.getNonce());
-            String actual = new String(cipher.doFinal(Base64.getDecoder().decode(form.getSign())));
-            boolean timeValid = Math.abs(form.getTimestamp() - jwtTokenService.getClock()) < 10000;
-            boolean signValid = expected.equals(actual);
-            if (!timeValid || !signValid || !nonceValid) {
-                result.put(STATUS, ERROR);
-                return ResponseEntity.status(401).body(result);
-            }
-            String newJwt = jwtTokenService.refreshToken(jwt);
-            if (newJwt == null) {
-                result.put(STATUS, ERROR);
-                return ResponseEntity.status(403).body(result);
-            }
-            userSessionService.refreshSession(sender.getName(), sid);
-            result.put(STATUS, OK);
-            result.put("jwt", newJwt);
-            return ResponseEntity.ok(result);
-        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | InvalidAlgorithmParameterException e) {
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, form.getNonce().getBytes()));
+        String expected = form.getNonce() + " " + form.getTimestamp();
+        boolean nonceValid = userSessionService.validNonce(form.getNonce());
+        String actual = new String(cipher.doFinal(Base64.getDecoder().decode(form.getSign())));
+        boolean timeValid = Math.abs(form.getTimestamp() - jwtTokenService.getClock()) < 10000;
+        boolean signValid = expected.equals(actual);
+        if (!timeValid || !signValid || !nonceValid) {
             result.put(STATUS, ERROR);
-            return ResponseEntity.badRequest().body(result);
+            return ResponseEntity.status(401).body(result);
         }
+        String newJwt = jwtTokenService.refreshToken(jwt);
+        if (newJwt == null) {
+            result.put(STATUS, ERROR);
+            return ResponseEntity.status(403).body(result);
+        }
+        userSessionService.refreshSession(sender.getName(), sid);
+        result.put(STATUS, OK);
+        result.put("jwt", newJwt);
+        return ResponseEntity.ok(result);
     }
 
     // should never fails so you cannot tells if a email is registered
