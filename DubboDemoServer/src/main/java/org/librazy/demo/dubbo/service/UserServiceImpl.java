@@ -2,7 +2,6 @@ package org.librazy.demo.dubbo.service;
 
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
-import org.librazy.demo.dubbo.domain.repo.SrpAccountRepository;
 import org.librazy.demo.dubbo.domain.repo.UserRepository;
 import org.librazy.demo.dubbo.model.SrpSignupForm;
 import org.slf4j.Logger;
@@ -27,12 +26,9 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    private final SrpAccountRepository srpAccountRepository;
-
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, SrpAccountRepository srpAccountRepository) {
+    public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.srpAccountRepository = srpAccountRepository;
     }
 
     @Override
@@ -76,12 +72,5 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserEntity findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
-    }
-
-    @Override
-    @Transactional
-    public void clear() {
-        srpAccountRepository.deleteAllInBatch();
-        userRepository.deleteAllInBatch();
     }
 }

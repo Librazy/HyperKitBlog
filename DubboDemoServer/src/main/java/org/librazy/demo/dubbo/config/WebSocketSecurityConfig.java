@@ -31,6 +31,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
 import java.util.List;
+import java.util.Objects;
 
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 @EnableWebSocketMessageBroker
@@ -64,12 +65,12 @@ public class WebSocketSecurityConfig
         @Override
         public Message<?> preSend(@NotNull Message<?> message, MessageChannel channel) {
             StompHeaderAccessor accessor =
-                    MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-            if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    Objects.requireNonNull(MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class));
+            if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                 try {
-                    List<String> header = accessor.getNativeHeader(jwtConfigParams.tokenHeader);
-                    String authHeader = header != null ? header.get(0) : null;
-                    if (authHeader != null && authHeader.startsWith(jwtConfigParams.tokenHead)) {
+                    List<String> header = Objects.requireNonNull(accessor.getNativeHeader(jwtConfigParams.tokenHeader));
+                    String authHeader = Objects.requireNonNull(header.get(0));
+                    if (authHeader.startsWith(jwtConfigParams.tokenHead)) {
                         final String authToken = authHeader.substring(jwtConfigParams.tokenHead.length() + 1); // The part after "Bearer "
                         checkToken(accessor, authToken);
                         return message;

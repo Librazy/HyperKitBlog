@@ -10,6 +10,8 @@ import com.lambdaworks.redis.api.StatefulRedisConnection;
 import org.librazy.demo.dubbo.config.RedisUtils;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.model.SrpSignupForm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +24,8 @@ import static org.librazy.demo.dubbo.config.RedisUtils.OK;
 @Service
 @Component
 public class SrpSessionServiceImpl implements SrpSessionService {
+
+    private static Logger logger = LoggerFactory.getLogger(SrpSessionServiceImpl.class);
 
     private final ObjectMapper mapper;
 
@@ -70,7 +74,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             oos.writeObject(session);
             String b64os = Base64.getEncoder().encodeToString(baos.toByteArray());
-            String result = connection.sync().set(RedisUtils.srpSession(String.valueOf(id)), b64os, SetArgs.Builder.ex(10).nx());
+            String result = connection.sync().set(RedisUtils.srpSession(String.valueOf(id)), b64os, SetArgs.Builder.ex(30).nx());
             if (!result.equals(OK)) {
                 throw new IllegalStateException("session already exists");
             }
@@ -107,9 +111,9 @@ public class SrpSessionServiceImpl implements SrpSessionService {
     public void saveSignup(SrpSignupForm signupForm) {
         if (id >= 0) throw new IllegalArgumentException("Trying to run saveSignup with positive id:" + id);
         try {
-            if (!OK.equals(
-                    connection.sync().set(RedisUtils.signupSession(String.valueOf(id)), mapper.writeValueAsString(signupForm), SetArgs.Builder.ex(10).nx())
-            )) {
+            String set = connection.sync().set(RedisUtils.signupSession(String.valueOf(id)), mapper.writeValueAsString(signupForm), SetArgs.Builder.ex(30).nx());
+            logger.info("save signup of {}: {}", signupForm.getEmail(), set);
+            if (!OK.equals(set)) {
                 throw new IllegalStateException("signup form already exists");
             }
         } catch (JsonProcessingException e) {

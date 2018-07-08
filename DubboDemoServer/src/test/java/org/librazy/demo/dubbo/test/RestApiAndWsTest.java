@@ -5,6 +5,7 @@ import com.bitbucket.thinbus.srp6.js.HexHashedVerifierGenerator;
 import com.bitbucket.thinbus.srp6.js.SRP6JavaClientSessionSHA256;
 import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
+import com.nimbusds.srp6.SRP6Exception;
 import org.h2.tools.Server;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
@@ -14,7 +15,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.config.JwtConfigParams;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
+import org.librazy.demo.dubbo.domain.SrpAccountEntity;
+import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.*;
+import org.librazy.demo.dubbo.service.SrpSessionService;
 import org.librazy.demo.dubbo.service.UserService;
 import org.librazy.demo.dubbo.service.UserSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +77,9 @@ class RestApiAndWsTest {
     @Autowired(required = false)
     @Reference
     private UserSessionService userSessionService;
+    @Autowired(required = false)
+    @Reference
+    private SrpSessionService srpSessionService;
     @Autowired
     private UserService userService;
 
@@ -99,7 +106,7 @@ class RestApiAndWsTest {
 
     @BeforeEach
     void cleanRedis() {
-        connection.sync().flushdb();
+        connection.sync().flushall();
     }
 
     @Test
@@ -110,8 +117,6 @@ class RestApiAndWsTest {
         final String email = "a@b.com";
         final String password = "password";
         final String nick = "nick";
-
-        userService.clear();
 
         // init the client session and parameters
         SRP6JavaClientSessionSHA256 signupSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
@@ -382,18 +387,12 @@ class RestApiAndWsTest {
     }
 
     class BadRequestEntity {
-        private String bad;
-
-        public String getBad() {
-            return bad;
-        }
-
-        public void setBad(String bad) {
-            this.bad = bad;
-        }
+        public String bad;
     }
 
     @Test
+    @Transactional
+    @Rollback
     void requestWithNonBearerAuthWill401() {
         ResponseEntity<Void> req = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, "NotABearer").build(), Void.class);
         assertEquals(401, req.getStatusCodeValue());
@@ -401,6 +400,8 @@ class RestApiAndWsTest {
 
 
     @Test
+    @Transactional
+    @Rollback
     void badWsConnectWithoutAuth() {
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         StompHeaders headers = new StompHeaders();
@@ -430,6 +431,8 @@ class RestApiAndWsTest {
     }
 
     @Test
+    @Transactional
+    @Rollback
     void signupWithoutCode() {
         final String email = "a@b.com";
         final String nick = "nick";
@@ -445,5 +448,56 @@ class RestApiAndWsTest {
         signupForm.setCode("badcode");
         ResponseEntity<Map> badSignup = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
         assertEquals(409, badSignup.getStatusCodeValue());
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void badAndGoodRegister() throws SRP6Exception {
+        final String email = "a@b.com";
+        final String password = "password";
+
+        // init the client session and parameters
+        SRP6JavaClientSessionSHA256 signupSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
+        signupSession.step1(email, password);
+
+        String salt = signupSession.generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+
+        HexHashedVerifierGenerator gen = new HexHashedVerifierGenerator(
+                config.n, config.g, SRP6JavascriptServerSessionSHA256.SHA_256);
+        String verifier = gen.generateVerifier(salt, email, password);
+
+        SrpRegisterForm badPass = new SrpRegisterForm();
+        badPass.setId(-1L);
+        badPass.setPassword("bad");
+
+        ResponseEntity<Map> badPassRes = testRestTemplate.postForEntity("/register", badPass, Map.class);
+        assertEquals(400, badPassRes.getStatusCodeValue());
+
+        SrpRegisterForm noSession = new SrpRegisterForm();
+        noSession.setId(-1L);
+        noSession.setPassword("ba:d");
+
+        ResponseEntity<Map> noSessionRes = testRestTemplate.postForEntity("/register", noSession, Map.class);
+        assertEquals(400, noSessionRes.getStatusCodeValue());
+
+        SrpSignupForm signupForm = new SrpSignupForm();
+        signupForm.setEmail(email);
+        signupForm.setSalt(salt);
+        signupForm.setVerifier(verifier);
+        signupForm.setCode("code");
+        signupForm.setNick("nick");
+        UserEntity user = new UserEntity(-114515L, signupForm.getEmail());
+        SrpAccountEntity account = new SrpAccountEntity(user, signupForm.getSalt(), signupForm.getVerifier());
+        srpSessionService.newSession(config.n, config.g);
+        srpSessionService.step1(account);
+        srpSessionService.saveSignup(signupForm);
+
+        SrpRegisterForm badPass2 = new SrpRegisterForm();
+        badPass2.setId(-114515L);
+        badPass2.setPassword("ba:d");
+
+        ResponseEntity<Map> badPass2Res = testRestTemplate.postForEntity("/register", badPass2, Map.class);
+        assertEquals(400, badPass2Res.getStatusCodeValue());
     }
 }

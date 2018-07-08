@@ -20,7 +20,4 @@ public interface UserService extends UserDetailsService {
 
     @Transactional(readOnly = true)
     UserEntity findByEmail(String email);
-
-    @Transactional
-    void clear();
 }
