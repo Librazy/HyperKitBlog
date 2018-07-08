@@ -80,8 +80,6 @@ class RestApiAndWsTest {
     @Autowired(required = false)
     @Reference
     private SrpSessionService srpSessionService;
-    @Autowired
-    private UserService userService;
 
     private static MessageDigest sha512() {
         try {
@@ -387,6 +385,7 @@ class RestApiAndWsTest {
     }
 
     class BadRequestEntity {
+        @SuppressWarnings("unused")
         public String bad;
     }
 
@@ -405,6 +404,21 @@ class RestApiAndWsTest {
     void badWsConnectWithoutAuth() {
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         StompHeaders headers = new StompHeaders();
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+        ListenableFuture<StompSession> connect = stompClient.connect("ws://localhost:" + port + "/stomp",
+                new WebSocketHttpHeaders(),
+                headers,
+                new StompSessionHandlerAdapter() {
+                });
+        ExecutionException exception = assertThrows(ExecutionException.class, connect::get);
+        assertEquals(ConnectionLostException.class, exception.getCause().getClass());
+    }
+
+    @Test
+    void badWsConnectWithNonBearerAuth() {
+        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+        StompHeaders headers = new StompHeaders();
+        headers.put(jwtConfigParams.tokenHeader, Collections.singletonList("NonBearerAuth"));
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
         ListenableFuture<StompSession> connect = stompClient.connect("ws://localhost:" + port + "/stomp",
                 new WebSocketHttpHeaders(),
@@ -453,7 +467,7 @@ class RestApiAndWsTest {
     @Test
     @Transactional
     @Rollback
-    void badAndGoodRegister() throws SRP6Exception {
+    void badAndGoodRegister() {
         final String email = "a@b.com";
         final String password = "password";
 
