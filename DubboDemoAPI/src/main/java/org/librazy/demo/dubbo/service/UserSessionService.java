@@ -1,6 +1,5 @@
 package org.librazy.demo.dubbo.service;
 
-import java.io.Closeable;
 import java.util.Set;
 
 public interface UserSessionService {
