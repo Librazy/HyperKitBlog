@@ -2,7 +2,6 @@ package org.librazy.demo.dubbo;
 
 import com.alibaba.dubbo.spring.boot.annotation.EnableDubboConfiguration;
 import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
-import org.librazy.demo.dubbo.web.SrpController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;

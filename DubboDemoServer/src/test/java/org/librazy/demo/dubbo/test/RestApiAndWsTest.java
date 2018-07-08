@@ -18,7 +18,9 @@ import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.*;
+import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.librazy.demo.dubbo.service.SrpSessionService;
+import org.librazy.demo.dubbo.service.UserService;
 import org.librazy.demo.dubbo.service.UserSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -76,7 +78,12 @@ class RestApiAndWsTest {
     private UserSessionService userSessionService;
     @Autowired(required = false)
     @Reference
+    private JwtTokenService jwtTokenService;
+    @Autowired(required = false)
+    @Reference
     private SrpSessionService srpSessionService;
+    @Autowired
+    private UserService userService;
 
     @BeforeAll
     static void startH2Console() throws SQLException {
@@ -261,6 +268,31 @@ class RestApiAndWsTest {
         refreshForm.setSign(signreused);
         ResponseEntity<Map> refreshreused = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
         assertEquals(401, refreshreused.getStatusCodeValue());
+
+        refreshForm.setNonce(UUID.randomUUID().toString());
+        Cipher cipherbt = Cipher.getInstance("AES/GCM/NoPadding");
+        cipherbt.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
+        String plainbt = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp() - 20000);
+        String signbt = Base64.getEncoder().encodeToString(cipherbt.doFinal(plainbt.getBytes()));
+        refreshForm.setSign(signbt);
+        ResponseEntity<Map> refreshbt = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
+        assertEquals(401, refreshbt.getStatusCodeValue());
+
+        long oldExpiration = jwtTokenService.getExpiration();
+        long oldMr = jwtTokenService.getMaximumRefresh();
+        jwtTokenService.setMaximumRefresh(0);
+
+        refreshForm.setNonce(UUID.randomUUID().toString());
+        Cipher ciphermr = Cipher.getInstance("AES/GCM/NoPadding");
+        ciphermr.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
+        String plainmr = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
+        String signmr = Base64.getEncoder().encodeToString(ciphermr.doFinal(plainmr.getBytes()));
+        refreshForm.setSign(signmr);
+        ResponseEntity<Map> refreshmr = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
+        assertEquals(403, refreshmr.getStatusCodeValue());
+
+        jwtTokenService.setExpiration(oldExpiration);
+        jwtTokenService.setMaximumRefresh(oldMr);
 
         refreshForm.setNonce(UUID.randomUUID().toString());
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
@@ -455,7 +487,7 @@ class RestApiAndWsTest {
     @Test
     @Transactional
     @Rollback
-    void badAndGoodRegister() {
+    void badRegister() {
         final String email = "a@b.com";
         final String password = "password";
 
@@ -501,5 +533,27 @@ class RestApiAndWsTest {
 
         ResponseEntity<Map> badPass2Res = testRestTemplate.postForEntity("/register", badPass2, Map.class);
         assertEquals(400, badPass2Res.getStatusCodeValue());
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void signupAlreadyExist() {
+        final String email = "a@b.com";
+        final String nick = "nick";
+
+        SrpSignupForm signupForm = new SrpSignupForm();
+        signupForm.setEmail(email);
+        signupForm.setSalt("some salt");
+        signupForm.setVerifier("some verifier");
+        signupForm.setNick(nick);
+        SrpChallengeForm challengeForm = new SrpChallengeForm();
+        challengeForm.setEmail(email);
+
+        userService.registerUser(signupForm);
+
+        signupForm.setCode("badcode");
+        ResponseEntity<Map> badSignup = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
+        assertEquals(409, badSignup.getStatusCodeValue());
     }
 }

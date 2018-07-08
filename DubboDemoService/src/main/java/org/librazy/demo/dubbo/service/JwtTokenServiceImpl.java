@@ -43,8 +43,18 @@ public class JwtTokenServiceImpl implements JwtTokenService, Serializable {
     }
 
     @Override
+    public void setExpiration(long expiration) {
+        this.expiration = expiration;
+    }
+
+    @Override
     public long getMaximumRefresh() {
         return maximumRefresh;
+    }
+
+    @Override
+    public void setMaximumRefresh(long maximumRefresh) {
+        this.maximumRefresh = maximumRefresh;
     }
 
     @Override

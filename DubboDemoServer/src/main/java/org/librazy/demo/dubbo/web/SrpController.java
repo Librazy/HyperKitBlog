@@ -226,5 +226,4 @@ public class SrpController {
         md.update(value.getBytes(StandardCharsets.UTF_8));
         return HexHashedRoutines.toHexString(md.digest());
     }
-
 }

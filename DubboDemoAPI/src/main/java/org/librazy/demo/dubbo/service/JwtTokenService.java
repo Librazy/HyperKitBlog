@@ -8,7 +8,11 @@ public interface JwtTokenService {
 
     long getExpiration();
 
+    void setExpiration(long expiration);
+
     long getMaximumRefresh();
+
+    void setMaximumRefresh(long maximumRefresh);
 
     Map<String, Object> validateClaimsFromToken(String token);
 

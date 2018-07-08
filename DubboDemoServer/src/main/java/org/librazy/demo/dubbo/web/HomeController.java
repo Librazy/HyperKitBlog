@@ -22,7 +22,10 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.validation.Valid;
-import java.security.*;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,7 +76,7 @@ public class HomeController {
             String expected = form.getNonce() + " " + form.getTimestamp();
             boolean nonceValid = userSessionService.validNonce(form.getNonce());
             String actual = new String(cipher.doFinal(Base64.getDecoder().decode(form.getSign())));
-            boolean timeValid = Math.abs(form.getTimestamp() - System.currentTimeMillis()) < 10000;
+            boolean timeValid = Math.abs(form.getTimestamp() - jwtTokenService.getClock()) < 10000;
             boolean signValid = expected.equals(actual);
             if (!timeValid || !signValid || !nonceValid) {
                 result.put(STATUS, ERROR);
