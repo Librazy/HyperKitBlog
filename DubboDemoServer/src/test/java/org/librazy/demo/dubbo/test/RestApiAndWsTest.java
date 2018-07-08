@@ -48,7 +48,10 @@ import javax.transaction.Transactional;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -188,6 +191,9 @@ class RestApiAndWsTest {
         assertNotNull(registerBody.get("m2"));
         signupSession.step3(registerBody.get("m2"));
         signupSession.getSessionKey(false);
+
+        ResponseEntity<Map> signupAr = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
+        assertEquals(409, signupAr.getStatusCodeValue());
 
         // then try signin
         SRP6JavaClientSessionSHA256 signinSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
@@ -535,27 +541,5 @@ class RestApiAndWsTest {
 
         ResponseEntity<Map> badPass2Res = testRestTemplate.postForEntity("/register", badPass2, Map.class);
         assertEquals(400, badPass2Res.getStatusCodeValue());
-    }
-
-    @Test
-    @Transactional
-    @Rollback
-    void signupAlreadyExist() {
-        final String email = "a@b.com";
-        final String nick = "nick";
-
-        SrpSignupForm signupForm = new SrpSignupForm();
-        signupForm.setEmail(email);
-        signupForm.setSalt("some salt");
-        signupForm.setVerifier("some verifier");
-        signupForm.setNick(nick);
-        SrpChallengeForm challengeForm = new SrpChallengeForm();
-        challengeForm.setEmail(email);
-
-        userService.registerUser(signupForm);
-
-        signupForm.setCode("badcode");
-        ResponseEntity<Map> badSignup = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
-        assertEquals(409, badSignup.getStatusCodeValue());
     }
 }

@@ -78,7 +78,7 @@ public class SrpController {
             return ResponseEntity.badRequest().body(body);
         }
         // never tell user if a email is registered or not
-        if (userService.findByEmail(signupForm.getEmail()) != null){
+        if (userService.findByEmail(signupForm.getEmail()) != null) {
             logger.warn("try to sign up a email {} that already registered.", signupForm.getEmail());
             body.put(STATUS, ERROR);
             body.put(MSG, "code;");
