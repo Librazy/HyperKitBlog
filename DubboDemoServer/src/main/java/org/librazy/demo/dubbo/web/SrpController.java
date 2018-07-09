@@ -26,6 +26,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HashMap;
@@ -157,7 +158,7 @@ public class SrpController {
     public @ResponseBody
     ResponseEntity<Map<String, String>> challenge(
             @Valid @RequestBody SrpChallengeForm challengeForm,
-            Errors errors) {
+            Errors errors) throws IOException {
         Map<String, String> body = new HashMap<>();
 
         if (errors.hasErrors()) {

@@ -4,6 +4,7 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import com.bitbucket.thinbus.srp6.js.HexHashedVerifierGenerator;
 import com.bitbucket.thinbus.srp6.js.SRP6JavaClientSessionSHA256;
 import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
 import org.h2.tools.Server;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +21,6 @@ import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.*;
 import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.librazy.demo.dubbo.service.SrpSessionService;
-import org.librazy.demo.dubbo.service.UserService;
 import org.librazy.demo.dubbo.service.UserSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -45,6 +45,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.sql.SQLException;
@@ -85,8 +86,6 @@ class RestApiAndWsTest {
     @Autowired(required = false)
     @Reference
     private SrpSessionService srpSessionService;
-    @Autowired
-    private UserService userService;
 
     @BeforeAll
     static void startH2Console() throws SQLException {
@@ -223,8 +222,6 @@ class RestApiAndWsTest {
         signinSession.step3(signinBody.get("m2"));
         signinSession.getSessionKey(false);
 
-        // assertNotEquals(userSessionService.getSessions(signinBody.get("id")).size(), 0);
-
         // the signin session works
         String signinJwt = jwtConfigParams.tokenHead + " " + signinBody.get("jwt");
         ResponseEntity<Void> jwtReqSignin = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, signinJwt).build(), Void.class);
@@ -267,13 +264,13 @@ class RestApiAndWsTest {
         ResponseEntity<Map> refreshbad = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
         assertEquals(401, refreshbad.getStatusCodeValue());
 
-        Cipher cipherreused = Cipher.getInstance("AES/GCM/NoPadding");
-        cipherreused.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
-        String plainreused = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
-        String signreused = Base64.getEncoder().encodeToString(cipherreused.doFinal(plainreused.getBytes()));
-        refreshForm.setSign(signreused);
-        ResponseEntity<Map> refreshreused = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
-        assertEquals(401, refreshreused.getStatusCodeValue());
+        Cipher cipherReused = Cipher.getInstance("AES/GCM/NoPadding");
+        cipherReused.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, refreshForm.getNonce().getBytes()));
+        String plainReused = refreshForm.getNonce() + " " + String.valueOf(refreshForm.getTimestamp());
+        String signReused = Base64.getEncoder().encodeToString(cipherReused.doFinal(plainReused.getBytes()));
+        refreshForm.setSign(signReused);
+        ResponseEntity<Map> refreshReused = testRestTemplate.exchange(RequestEntity.post(URI.create("/refresh")).header(jwtConfigParams.tokenHeader, signinJwt).body(refreshForm), Map.class);
+        assertEquals(401, refreshReused.getStatusCodeValue());
 
         refreshForm.setNonce(UUID.randomUUID().toString());
         refreshForm.setTimestamp(jwtTokenService.getClock() - 30000);
@@ -495,7 +492,7 @@ class RestApiAndWsTest {
     @Test
     @Transactional
     @Rollback
-    void badRegister() {
+    void badRegister() throws IOException {
         final String email = "a@b.com";
         final String password = "password";
 
