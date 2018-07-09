@@ -38,12 +38,10 @@ public class UserSessionServiceImpl implements UserSessionService {
         connectionPubSub.async().addListener(new RedisPubSubAdapter<String, String>() {
             @Override
             public void message(String pattern, String channel, String message) {
-                if (message.equals("expired")) {
-                    String[] sections = channel.split(":");
-                    String id = sections[2];
-                    String sid = sections[4];
-                    connection.sync().srem(RedisUtils.sessions(id), sid);
-                }
+                String[] sections = channel.split(":");
+                String id = sections[2];
+                String sid = sections[4];
+                connection.sync().srem(RedisUtils.sessions(id), sid);
             }
         });
         connectionPubSub.async().psubscribe("__key*__:user:*:session:*:key");
