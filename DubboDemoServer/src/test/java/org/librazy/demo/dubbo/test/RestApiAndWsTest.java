@@ -4,7 +4,6 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import com.bitbucket.thinbus.srp6.js.HexHashedVerifierGenerator;
 import com.bitbucket.thinbus.srp6.js.SRP6JavaClientSessionSHA256;
 import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
 import org.h2.tools.Server;
 import org.jetbrains.annotations.NotNull;
@@ -191,8 +190,8 @@ class RestApiAndWsTest {
         signupSession.step3(registerBody.get("m2"));
         signupSession.getSessionKey(false);
 
-        ResponseEntity<Map> signupAr = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
-        assertEquals(409, signupAr.getStatusCodeValue());
+        ResponseEntity<Map> signupAlreadyExist = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
+        assertEquals(409, signupAlreadyExist.getStatusCodeValue());
 
         // then try signin
         SRP6JavaClientSessionSHA256 signinSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
@@ -226,6 +225,11 @@ class RestApiAndWsTest {
         String signinJwt = jwtConfigParams.tokenHead + " " + signinBody.get("jwt");
         ResponseEntity<Void> jwtReqSignin = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, signinJwt).build(), Void.class);
         assertEquals(204, jwtReqSignin.getStatusCodeValue());
+
+        assertThrows(IllegalStateException.class, () -> srpSessionService.loadSession(Long.parseLong(signinBody.get("id"))));
+        assertThrows(IllegalStateException.class, () -> srpSessionService.confirmSignup(2333));
+        assertThrows(IllegalStateException.class, () -> srpSessionService.getSignup());
+        assertThrows(IllegalArgumentException.class, () -> srpSessionService.saveSignup(signupForm));
 
         // keys match
         String key = signinSession.getSessionKey(false);

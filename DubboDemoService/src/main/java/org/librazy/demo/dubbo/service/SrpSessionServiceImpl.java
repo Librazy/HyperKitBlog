@@ -71,7 +71,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
         oos.writeObject(session);
         String b64os = Base64.getEncoder().encodeToString(baos.toByteArray());
         String result = connection.sync().set(RedisUtils.srpSession(String.valueOf(id)), b64os, SetArgs.Builder.ex(30).nx());
-        if (!result.equals(OK)) {
+        if (!OK.equals(result)) {
             throw new IllegalStateException("session already exists");
         }
         return b;
@@ -121,7 +121,6 @@ public class SrpSessionServiceImpl implements SrpSessionService {
     public void confirmSignup(long now) {
         String sid = session.getSessionKey(true);
         if (id >= 0) throw new IllegalStateException("Trying to run confirmSignup with positive id:" + id);
-        if (!userSessionService.renameId(String.valueOf(id), sid, String.valueOf(now)))
-            throw new IllegalStateException("id already exists:" + now);
+        userSessionService.renameId(String.valueOf(id), sid, String.valueOf(now));
     }
 }

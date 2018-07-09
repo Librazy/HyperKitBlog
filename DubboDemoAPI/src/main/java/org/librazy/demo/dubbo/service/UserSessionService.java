@@ -17,7 +17,7 @@ public interface UserSessionService {
 
     void clearSession(String id);
 
-    boolean renameId(String id, String sid, String now);
+    void renameId(String id, String sid, String now);
 
     boolean validNonce(String nonce);
 
