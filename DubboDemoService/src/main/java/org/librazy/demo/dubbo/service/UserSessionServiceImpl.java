@@ -2,7 +2,6 @@ package org.librazy.demo.dubbo.service;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.lambdaworks.redis.SetArgs;
-import com.lambdaworks.redis.TransactionResult;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
 import com.lambdaworks.redis.pubsub.RedisPubSubAdapter;
 import com.lambdaworks.redis.pubsub.StatefulRedisPubSubConnection;
@@ -41,9 +40,6 @@ public class UserSessionServiceImpl implements UserSessionService {
             public void message(String pattern, String channel, String message) {
                 if (message.equals("expired")) {
                     String[] sections = channel.split(":");
-                    if (sections.length != 6) {
-                        throw new IllegalStateException();
-                    }
                     String id = sections[2];
                     String sid = sections[4];
                     connection.sync().srem(RedisUtils.sessions(id), sid);
@@ -56,15 +52,11 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Override
     public void newSession(String id, String sid, String ua, String key) {
         if (OK.equals(connection.sync().set(RedisUtils.key(id, sid), key, SetArgs.Builder.ex(86400L * 7).nx()))) {
-            connection.sync().multi();
             connection.sync().sadd(RedisUtils.sessions(id), sid);
             connection.sync().setex(RedisUtils.userAgent(id, sid), 86400L * 7, ua);
-            TransactionResult result = connection.sync().exec();
-            if (!result.wasRolledBack()) {
-                return;
-            }
+        } else {
+            throw new IllegalStateException("Session already exist or failed to create session");
         }
-        throw new IllegalStateException("Session already exist or failed to create session");
     }
 
     @Override

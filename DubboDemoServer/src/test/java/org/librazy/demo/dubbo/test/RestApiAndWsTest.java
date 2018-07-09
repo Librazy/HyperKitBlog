@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.librazy.demo.dubbo.config.JwtConfigParams;
+import org.librazy.demo.dubbo.config.RedisUtils;
 import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
@@ -351,6 +352,12 @@ class RestApiAndWsTest {
         stompSession.send("/app/broadcast", new ChatMessage().setMid(1L).setContent("Content"));
         TimeUnit.SECONDS.sleep(1);
         assertTrue(messageReceived[0]);
+
+        assertTrue(connection.sync().sismember(RedisUtils.sessions(signinBody.get("id")), signinSession.getSessionKey(true)));
+        connection.sync().expire(RedisUtils.key(signinBody.get("id"), signinSession.getSessionKey(true)), 1);
+        TimeUnit.SECONDS.sleep(2);
+        assertFalse(connection.sync().sismember(RedisUtils.sessions(signinBody.get("id")), signinSession.getSessionKey(true)));
+
         userSessionService.clearSession(registerBody.get("id"));
 
         ResponseEntity<Void> jwtReqSigninDeleted = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, signinJwt).build(), Void.class);
