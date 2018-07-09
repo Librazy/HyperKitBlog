@@ -122,7 +122,7 @@ class RestApiAndWsTest {
                 config.n, config.g, SRP6JavascriptServerSessionSHA256.SHA_256);
         String verifier = gen.generateVerifier(salt, email, password);
 
-
+        assertThrows(UnsupportedOperationException.class, () -> srpSessionService.getSessionKey(true));
         // perform a signup, we should get 202 and parameters will be cached by the server
         // we need to perform a register to validate it
         SrpSignupForm signupForm = new SrpSignupForm();
@@ -205,6 +205,9 @@ class RestApiAndWsTest {
         Map<String, String> serverChallenge = challenge.getBody();
         assertNotNull(serverChallenge);
         signinSession.step2(serverChallenge.get("salt"), serverChallenge.get("b"));
+
+        ResponseEntity<Map> challengeReplay = testRestTemplate.postForEntity("/challenge", srpChallengeForm, Map.class);
+        assertEquals(400, challengeReplay.getStatusCodeValue());
 
         SrpSigninForm srpSigninForm = new SrpSigninForm();
         srpSigninForm.setEmail(email);

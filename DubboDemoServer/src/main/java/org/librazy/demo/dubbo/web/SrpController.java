@@ -26,7 +26,6 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HashMap;
@@ -158,7 +157,7 @@ public class SrpController {
     public @ResponseBody
     ResponseEntity<Map<String, String>> challenge(
             @Valid @RequestBody SrpChallengeForm challengeForm,
-            Errors errors) throws IOException {
+            Errors errors) {
         Map<String, String> body = new HashMap<>();
 
         if (errors.hasErrors()) {
@@ -170,13 +169,19 @@ public class SrpController {
         final String fakeSalt = hash(config.saltOfFakeSalt + challengeForm.getEmail());
         final SrpAccountEntity realAccount = userService.getSrpAccount(challengeForm.getEmail());
 
-
         if (realAccount != null) {
-            session.newSession(config.n, config.g);
-            String b = session.step1(realAccount);
-            body.put("salt", realAccount.getSalt());
-            body.put("b", b);
-            return ResponseEntity.ok(body);
+            try {
+                session.newSession(config.n, config.g);
+                String b = session.step1(realAccount);
+                body.put("salt", realAccount.getSalt());
+                body.put("b", b);
+                return ResponseEntity.ok(body);
+            } catch (Exception e) {
+                logger.warn("challenge failed with exception", e);
+                body.put(STATUS, ERROR);
+                body.put(MSG, ";challenge failed");
+                return ResponseEntity.badRequest().body(body);
+            }
         } else {
             final SrpAccountEntity fakeAccount = new SrpAccountEntity(new UserEntity(SecurityInstanceUtils.getStrongRandom().nextLong(), challengeForm.getEmail()), fakeSalt);
             final SRP6JavascriptServerSession fakeSession = new SRP6JavascriptServerSessionSHA256(
@@ -222,7 +227,7 @@ public class SrpController {
                 }
             } else throw new IllegalArgumentException();
         } catch (Exception e) {
-            logger.warn("Authenticate failed with exception", e);
+            logger.warn("authenticate failed with exception", e);
             body.put(STATUS, ERROR);
             body.put(MSG, ";username or password error");
             return ResponseEntity.status(401).body(body);
