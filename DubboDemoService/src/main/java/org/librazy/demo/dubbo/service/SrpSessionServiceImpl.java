@@ -123,4 +123,9 @@ public class SrpSessionServiceImpl implements SrpSessionService {
         if (id >= 0) throw new IllegalStateException("Trying to run confirmSignup with positive id:" + id);
         userSessionService.renameId(String.valueOf(id), sid, String.valueOf(now));
     }
+
+    @Override
+    public void clear(){
+        session = null;
+    }
 }

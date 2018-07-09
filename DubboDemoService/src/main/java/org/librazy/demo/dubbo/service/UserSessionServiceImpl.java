@@ -101,7 +101,7 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Override
     public void renameId(String id, String sid, String now) {
         if (!connection.sync().renamenx(RedisUtils.sessions(id), RedisUtils.sessions(now))) {
-            throw new IllegalStateException("session id " + id + " already exist");
+            throw new IllegalStateException("session id " + now + " already exist, origin " + id + " " + sid);
         }
         connection.sync().renamenx(RedisUtils.key(id, sid), RedisUtils.key(now, sid));
         connection.sync().renamenx(RedisUtils.userAgent(id, sid), RedisUtils.userAgent(now, sid));

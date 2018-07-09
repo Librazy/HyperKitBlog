@@ -5,6 +5,7 @@ import com.bitbucket.thinbus.srp6.js.HexHashedVerifierGenerator;
 import com.bitbucket.thinbus.srp6.js.SRP6JavaClientSessionSHA256;
 import com.bitbucket.thinbus.srp6.js.SRP6JavascriptServerSessionSHA256;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
+import com.nimbusds.srp6.SRP6Exception;
 import org.h2.tools.Server;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
@@ -102,6 +103,7 @@ class RestApiAndWsTest {
     @BeforeEach
     void cleanRedis() {
         connection.sync().flushall();
+        srpSessionService.clear();
     }
 
     @Test
@@ -545,6 +547,7 @@ class RestApiAndWsTest {
         srpSessionService.newSession(config.n, config.g);
         srpSessionService.step1(account);
         srpSessionService.saveSignup(signupForm);
+        assertThrows(IllegalStateException.class, () -> srpSessionService.saveSignup(signupForm));
 
         SrpRegisterForm badPass2 = new SrpRegisterForm();
         badPass2.setId(-114515L);
@@ -552,5 +555,52 @@ class RestApiAndWsTest {
 
         ResponseEntity<Map> badPass2Res = testRestTemplate.postForEntity("/register", badPass2, Map.class);
         assertEquals(400, badPass2Res.getStatusCodeValue());
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void goodRegisterWithDupId() throws IOException, SRP6Exception {
+        final String email = "c@b.com";
+        final String password = "password";
+
+        // init the client session and parameters
+        SRP6JavaClientSessionSHA256 signupSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
+        signupSession.step1(email, password);
+
+        String salt = signupSession.generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
+
+        HexHashedVerifierGenerator gen = new HexHashedVerifierGenerator(
+                config.n, config.g, SRP6JavascriptServerSessionSHA256.SHA_256);
+        String verifier = gen.generateVerifier(salt, email, password);
+
+        SrpSignupForm signupForm = new SrpSignupForm();
+        signupForm.setEmail(email);
+        signupForm.setSalt(salt);
+        signupForm.setVerifier(verifier);
+        signupForm.setCode("code");
+        signupForm.setNick("nick");
+        UserEntity user = new UserEntity(-114515L, signupForm.getEmail());
+        SrpAccountEntity account = new SrpAccountEntity(user, signupForm.getSalt(), signupForm.getVerifier());
+        srpSessionService.newSession(config.n, config.g);
+        String b = srpSessionService.step1(account);
+        srpSessionService.saveSignup(signupForm);
+        assertThrows(IllegalStateException.class, () -> srpSessionService.saveSignup(signupForm));
+
+        signupSession.step2(salt, b);
+        SrpRegisterForm registerForm = new SrpRegisterForm();
+        registerForm.setId(-114515L);
+        // lol
+        assertTrue(connection.sync().setnx(RedisUtils.sessions("1"), "bad"));
+        assertTrue(connection.sync().setnx(RedisUtils.sessions("2"), "bad"));
+        assertTrue(connection.sync().setnx(RedisUtils.sessions("3"), "bad"));
+        assertTrue(connection.sync().setnx(RedisUtils.sessions("4"), "bad"));
+        assertTrue(connection.sync().setnx(RedisUtils.sessions("5"), "bad"));
+        assertTrue(connection.sync().setnx(RedisUtils.sessions("6"), "bad"));
+        assertTrue(connection.sync().setnx(RedisUtils.sessions("7"), "bad"));
+        registerForm.setPassword(signupSession.getClientEvidenceMessage() + ":" + signupSession.getPublicClientValue());
+        ResponseEntity<Map> register = testRestTemplate.postForEntity("/register", registerForm, Map.class);
+        assertEquals(400, register.getStatusCodeValue());
+
     }
 }

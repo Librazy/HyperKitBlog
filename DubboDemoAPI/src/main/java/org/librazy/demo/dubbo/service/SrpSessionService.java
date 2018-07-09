@@ -22,4 +22,6 @@ public interface SrpSessionService {
     SrpSignupForm getSignup() throws IOException;
 
     void confirmSignup(long now);
+
+    void clear();
 }

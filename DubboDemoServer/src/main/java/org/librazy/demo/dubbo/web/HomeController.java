@@ -11,6 +11,8 @@ import org.librazy.demo.dubbo.model.SrpChallengeForm;
 import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.librazy.demo.dubbo.service.UserService;
 import org.librazy.demo.dubbo.service.UserSessionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +50,9 @@ public class HomeController {
 
     @Reference
     private UserSessionService userSessionService;
+
+    private static Logger logger = LoggerFactory.getLogger(HomeController.class);
+
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
@@ -100,6 +105,7 @@ public class HomeController {
 
         if (ud != null) {
             // WAI: Prevent spoofing whether one email is already registered
+            logger.warn("attempt to request code for already registered email: {}", form.getEmail());
             result.put(STATUS, OK);
             return ResponseEntity.ok(result);
         }
@@ -110,11 +116,14 @@ public class HomeController {
                 result.put("mock", code); // TOD: remove it when email sms api available
                 return ResponseEntity.ok(result);
             } else {
+                logger.warn("too frequent code request for {}", form.getEmail());
                 result.put(STATUS, ERROR);
                 result.put("msg", ";too much request");
                 return ResponseEntity.status(429).header("Retry-After", "60").body(result);
             }
         } catch (Exception e) {
+            logger.warn("exception when requesting code for {}", form.getEmail());
+            logger.warn("exception:", e);
             result.put(STATUS, ERROR);
             result.put("msg", ";email number not valid");
             return ResponseEntity.badRequest().body(result);
