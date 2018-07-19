@@ -1,8 +1,9 @@
-# SpringBootDubboJwtSrpDemo
+# HyperKit
 
-[![Build Status](https://travis-ci.com/Librazy/SpringBootDubboJwtSrpDemo.svg?branch=master)](https://travis-ci.com/Librazy/SpringBootDubboJwtSrpDemo)
-[![GitHub Stars](https://img.shields.io/github/stars/librazy/SpringBootDubboJwtSrpDemo.svg?style=plastic&label=Stars)](https://github.com/Librazy/SpringBootDubboJwtSrpDemo/stargazers)
+[![Build Status](https://travis-ci.com/H-Y-K-T-G/HyperKitBlog.svg?branch=master)](https://travis-ci.com/Librazy/SpringBootDubboJwtSrpDemo)
+[![GitHub Stars](https://img.shields.io/github/stars/H-Y-K-T-G/HyperKitBlog.svg?style=plastic&label=Stars)](https://github.com/Librazy/SpringBootDubboJwtSrpDemo/stargazers)
 [![GitHub followers](https://img.shields.io/github/followers/librazy.svg?style=plastic&label=Follow)](https://github.com/Librazy?tab=followers)
+[![CLA assistant](https://cla-assistant.io/readme/badge/H-Y-K-T-G/HyperKitBlog)](https://cla-assistant.io/H-Y-K-T-G/HyperKitBlog)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FH-Y-K-T-G%2FHyperKitBlog.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FH-Y-K-T-G%2FHyperKitBlog?ref=badge_shield)
 
 [
