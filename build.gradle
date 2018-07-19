@@ -3,7 +3,7 @@ buildscript {
         maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
     }
     dependencies {
-        classpath 'com.netflix.nebula:gradle-lint-plugin:latest.release'
+        classpath 'com.netflix.nebula:gradle-lint-plugin:9.3.4'
     }
 }
 
