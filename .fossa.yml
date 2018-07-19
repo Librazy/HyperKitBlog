@@ -3,8 +3,7 @@
 version: 1
 cli:
   server: https://app.fossa.io
-  project: git@github.com:H-Y-K-T-G/HyperKitBlog.git
-  fetcher: custom
+  project: https://github.com/H-Y-K-T-G/HyperKitBlog
 analyze:
   modules:
   - name: HyperKitAPI:compile
