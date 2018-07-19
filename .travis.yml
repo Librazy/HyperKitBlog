@@ -1,13 +1,17 @@
 language: java
 install:
 - sudo ./install_fossa.sh
+- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+- chmod +x ./cc-test-reporter
 before_script:
 - sed -i "s/compile\sproject/\/\/compile\ project/g" `grep "compile\sproject" -rl .`
 - fossa
 - sed -i "s/\/\/compile\sproject/compile\ project/g" `grep "\/\/compile\sproject" -rl .`
+- ./cc-test-reporter before-build
 script:
 - ./gradlew clean build jacocoMerge
 - ./gradlew sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
+- ./cc-test-reporter after-build --exit-code $EXIT_CODE
 after_success:
 - fossa test
 before_cache:
