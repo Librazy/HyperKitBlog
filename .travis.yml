@@ -11,7 +11,7 @@ before_script:
 script:
 - ./gradlew clean build jacocoMerge
 - ./gradlew sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
-- ./cc-test-reporter after-build --exit-code $EXIT_CODE
+- ./cc-test-reporter after-build
 after_success:
 - fossa test
 before_cache:
