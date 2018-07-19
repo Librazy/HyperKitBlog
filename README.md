@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.com/Librazy/SpringBootDubboJwtSrpDemo.svg?branch=master)](https://travis-ci.com/Librazy/SpringBootDubboJwtSrpDemo)
 [![GitHub Stars](https://img.shields.io/github/stars/librazy/SpringBootDubboJwtSrpDemo.svg?style=plastic&label=Stars)](https://github.com/Librazy/SpringBootDubboJwtSrpDemo/stargazers)
 [![GitHub followers](https://img.shields.io/github/followers/librazy.svg?style=plastic&label=Follow)](https://github.com/Librazy?tab=followers)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FH-Y-K-T-G%2FHyperKitBlog.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FH-Y-K-T-G%2FHyperKitBlog?ref=badge_shield)
 
 [
 ![Bugs](https://sonarcloud.io/api/project_badges/measure?project=HyperKit&metric=bugs)
@@ -30,3 +31,7 @@
 
 
 A Spring Boot application with Dubbo + Jwt + Srp configured
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FH-Y-K-T-G%2FHyperKitBlog.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FH-Y-K-T-G%2FHyperKitBlog?ref=badge_large)
