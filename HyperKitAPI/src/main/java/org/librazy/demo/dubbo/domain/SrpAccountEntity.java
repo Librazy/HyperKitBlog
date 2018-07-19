@@ -32,6 +32,7 @@ public class SrpAccountEntity implements Serializable {
      */
     @NotBlank
     @Column(columnDefinition = "TEXT")
+    @Convert(converter = JpaCryptoConverter.class)
     private String verifier;
 
     @MapsId
