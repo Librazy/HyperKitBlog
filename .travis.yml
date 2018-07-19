@@ -2,9 +2,9 @@ language: java
 install:
 - "curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash"
 before_script:
-- sed -i "s/compile\sproject/\/\/compile\ project/g" `grep "compile project" -rl .`
+- sed -i "s/compile\sproject/\/\/compile\ project/g" `grep "compile\sproject" -rl .`
 - fossa
-- sed -i "s/\/\/compile project/compile\ project/g" `grep "//compile project" -rl .`
+- sed -i "s/\/\/compile\sproject/compile\ project/g" `grep "\/\/compile\sproject" -rl .`
 script:
 - ./gradlew clean build jacocoMerge
 - ./gradlew sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
