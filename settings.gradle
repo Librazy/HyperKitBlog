@@ -1,2 +1,2 @@
-include 'DubboDemoAPI', 'DubboDemoProvider', 'DubboDemoServer', 'DubboDemoService'
-rootProject.name = 'DubboDemo'
+include 'HyperKitAPI', 'HyperKitProvider', 'HyperKitServer', 'HyperKitService'
+rootProject.name = 'HyperKit'

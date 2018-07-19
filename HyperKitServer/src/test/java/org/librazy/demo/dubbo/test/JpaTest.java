@@ -28,13 +28,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @Rollback
-@ActiveProfiles("test-mysql")
+@ActiveProfiles("test-default")
 class JpaTest {
 
+    private static Server h2Server;
     @Autowired
     private SrpAccountRepository srpAccountRepository;
     @Autowired
     private UserRepository userRepository;
+
+    @BeforeAll
+    static void startH2Console() throws SQLException {
+        h2Server = Server.createWebServer("-web",
+                "-webAllowOthers", "-webPort", String.valueOf(SocketUtils.findAvailableTcpPort()));
+        h2Server.start();
+    }
+
+    @AfterAll
+    static void stopH2Console() {
+        h2Server.stop();
+    }
 
     @BeforeEach
     void cleanDatabase() {

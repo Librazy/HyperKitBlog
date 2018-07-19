@@ -1,5 +1,8 @@
 buildscript {
-    repositories { jcenter() }
+    repositories {
+        maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+        jcenter()
+    }
     dependencies {
         classpath 'com.netflix.nebula:gradle-lint-plugin:latest.release'
     }
@@ -17,6 +20,10 @@ allprojects {
     apply plugin: 'nebula.lint' // add as many rules here as you'd like
     gradleLint.alwaysRun = false
     gradleLint.rules = ['all-dependency']
+
+    repositories {
+        maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+    }
 }
 
 // https://cristian.io/post/sonar-coverage/
