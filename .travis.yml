@@ -1,6 +1,6 @@
 language: java
 install:
-- curl https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
+- sudo ./install_fossa.sh
 before_script:
 - sed -i "s/compile\sproject/\/\/compile\ project/g" `grep "compile\sproject" -rl .`
 - fossa

@@ -3,8 +3,8 @@
 version: 1
 cli:
   server: https://app.fossa.io
-  project: https://github.com/H-Y-K-T-G/HyperKitBlog
-  locator: https://github.com/H-Y-K-T-G/HyperKitBlog$revision
+  project: https://github.com/HYKTG/HyperKitBlog
+  locator: https://github.com/HYKTG/HyperKitBlog$revision
   fetcher: git
 analyze:
   modules:
