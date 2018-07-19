@@ -23,7 +23,7 @@ allprojects {
 
 // https://cristian.io/post/sonar-coverage/
 
-def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
+def allTestCoverageFile = "$buildDir/jacoco/test.exec"
 
 sonarqube {
     properties {
