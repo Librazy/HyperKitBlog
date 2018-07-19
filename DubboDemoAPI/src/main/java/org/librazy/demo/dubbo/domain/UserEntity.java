@@ -1,6 +1,7 @@
 package org.librazy.demo.dubbo.domain;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -19,12 +20,14 @@ public class UserEntity implements Serializable {
     private long id;
 
     @Version
-    @Column
+    @Column(nullable = false)
     private Timestamp version;
 
+    @NotBlank
     @Column(unique = true)
     private String email;
 
+    @NotBlank
     @Column
     private String nick;
 
@@ -32,11 +35,27 @@ public class UserEntity implements Serializable {
     private String avatar;
 
     @Column
+    private String bio;
+
+    @Column
     @ElementCollection
     private List<String> role = new ArrayList<>(Collections.singleton("ROLE_USER"));
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
     private SrpAccountEntity srpAccount;
+
+    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, mappedBy = "author", orphanRemoval = true)
+    private List<BlogEntryEntity> blogEntries;
+
+    @ManyToMany(mappedBy = "stargazers")
+    private List<BlogEntryEntity> starredEntries;
+
+    @ManyToMany(mappedBy = "followers")
+    private List<UserEntity> following;
+
+    @ManyToMany
+    @JoinTable
+    private List<UserEntity> followers;
 
     protected UserEntity() {
     }
@@ -105,5 +124,55 @@ public class UserEntity implements Serializable {
 
     protected void setVersion(Timestamp version) {
         this.version = version;
+    }
+
+    public List<BlogEntryEntity> getBlogEntries() {
+        return blogEntries;
+    }
+
+    public void setBlogEntries(List<BlogEntryEntity> blogEntries) {
+        this.blogEntries = blogEntries;
+    }
+
+    public List<BlogEntryEntity> getStarredEntries() {
+        return starredEntries;
+    }
+
+    public void setStarredEntries(List<BlogEntryEntity> starredEntries) {
+        this.starredEntries = starredEntries;
+    }
+
+    public void addStarredEntries(BlogEntryEntity starred) {
+        this.starredEntries.add(starred);
+        starred.getStargazers().add(this);
+    }
+
+    public void removeStarredEntries(BlogEntryEntity starred) {
+        this.starredEntries.remove(starred);
+        starred.getStargazers().remove(this);
+    }
+
+    public List<UserEntity> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(List<UserEntity> following) {
+        this.following = following;
+    }
+
+    public List<UserEntity> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(List<UserEntity> followers) {
+        this.followers = followers;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 }

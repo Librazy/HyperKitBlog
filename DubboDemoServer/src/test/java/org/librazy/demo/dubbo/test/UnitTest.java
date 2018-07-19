@@ -123,12 +123,12 @@ class UnitTest {
     }
 
     @Test
-    void jwtKeyResolverServiceTest() {
+    void jwtDoesNotSupportHS256() {
         assertThrows(UnsupportedJwtException.class, () -> jwtKeyResolverService.resolveSigningKey(Jwts.jwsHeader().setAlgorithm("HS256"), Jwts.claims()));
     }
 
     @Test
-    void srpSessionTest() {
+    void srpSessionLoadingFails() {
         assertThrows(IllegalStateException.class, () -> srp.loadSession(114514));
         connection.sync().set(RedisUtils.srpSession(String.valueOf(114514)), "rO0ABXNyAB1vcmcubGlicmF6eS5kZW1vLmR1YmJvLnRlc3QuQ2kuRc/8wB/EAgAAeHA=");
         assertThrows(ClassNotFoundException.class, () -> srp.loadSession(114514));

@@ -3,6 +3,7 @@ package org.librazy.demo.dubbo.domain;
 import org.librazy.demo.dubbo.config.JpaCryptoConverter;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
@@ -17,10 +18,11 @@ public class SrpAccountEntity implements Serializable {
     private Long id;
 
     @Version
-    @Column
+    @Column(nullable = false)
     private Timestamp version;
 
-    @Column(unique = true)
+    @NotBlank
+    @Column(unique = true, nullable = false)
     private String salt;
 
     /**
@@ -28,13 +30,13 @@ public class SrpAccountEntity implements Serializable {
      * leaked database backups being used to perform an offline dictionary
      * attack
      */
-    @Column(columnDefinition = "CLOB")
-    @Convert(converter = JpaCryptoConverter.class)
+    @NotBlank
+    @Column(columnDefinition = "TEXT")
     private String verifier;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "id", nullable = false)
     private UserEntity user;
 
     protected SrpAccountEntity() {

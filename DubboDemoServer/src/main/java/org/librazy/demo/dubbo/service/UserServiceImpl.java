@@ -40,7 +40,9 @@ public class UserServiceImpl implements UserService {
             log.info("user {} not found when loading", id);
             throw new UsernameNotFoundException("");
         }
-        return createUser(user.get().getSrpAccount());
+        UserEntity userEntity = user.get();
+        return new User(String.valueOf(userEntity.getId()), "",
+                createAuthority(userEntity));
     }
 
     @Override
@@ -53,13 +55,8 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-    private User createUser(SrpAccountEntity account) {
-        return new User(account.getId().toString(), account.getVerifier(),
-                createAuthority(account));
-    }
-
-    private Collection<GrantedAuthority> createAuthority(SrpAccountEntity account) {
-        return account.getUser().getRole().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
+    private Collection<GrantedAuthority> createAuthority(UserEntity user) {
+        return user.getRole().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
     }
 
     @Override
