@@ -10,8 +10,10 @@ before_script:
 - ./cc-test-reporter before-build
 script:
 - ./gradlew clean build jacocoFullReport
-- cp build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml jacoco.xml
-- ./cc-test-reporter after-build -t jacoco
+- mkdir ccJacoco
+- cp build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml ccJacoco/jacoco.xml
+- cp -rf HyperKit*/src/main/java/* ccJacoco/
+- ./cc-test-reporter after-build -t jacoco -p ./ccJacoco/
 - ./gradlew jacocoMerge sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
 after_success:
 - fossa test
