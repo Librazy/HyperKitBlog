@@ -35,4 +35,5 @@ A Spring Boot application with Dubbo + Jwt + Srp configured
 
 
 ## License
+
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FH-Y-K-T-G%2FHyperKitBlog.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FH-Y-K-T-G%2FHyperKitBlog?ref=badge_large)
