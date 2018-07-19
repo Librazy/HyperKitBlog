@@ -4,7 +4,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/HYKTG/HyperKitBlog.svg?style=plastic&label=Stars)](https://github.com/HYKTG/HyperKitBlog/stargazers)
 [![GitHub followers](https://img.shields.io/github/followers/librazy.svg?style=plastic&label=Follow)](https://github.com/Librazy?tab=followers)
 [![CLA assistant](https://cla-assistant.io/readme/badge/HYKTG/HyperKitBlog)](https://cla-assistant.io/HYKTG/HyperKitBlog)
-[![FOSSA Status](https://app.fossa.io/api/projects/custom%2B5289%2Fgithub.com%2FHYKTG%2FHyperKitBlog.svg?type=shield)](https://app.fossa.io/projects/custom%2B5289%2Fgithub.com%2FHYKTG%2FHyperKitBlog?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FHYKTG%2FHyperKitBlog.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FHYKTG%2FHyperKitBlog?ref=badge_shield)
 
 [
 ![Bugs](https://sonarcloud.io/api/project_badges/measure?project=HyperKit&metric=bugs)
@@ -34,4 +34,4 @@ A Spring Boot based Blog
 
 ## License
 
-[![FOSSA Status](https://app.fossa.io/api/projects/custom%2B5289%2Fgithub.com%2FHYKTG%2FHyperKitBlog.svg?type=large)](https://app.fossa.io/projects/custom%2B5289%2Fgithub.com%2FHYKTG%2FHyperKitBlog?ref=badge_large)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FHYKTG%2FHyperKitBlog.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FHYKTG%2FHyperKitBlog?ref=badge_large)
