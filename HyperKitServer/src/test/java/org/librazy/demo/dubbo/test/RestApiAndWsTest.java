@@ -607,7 +607,7 @@ class RestApiAndWsTest {
 
     @Test
     @Rollback
-    void blogApiCreateDeleteTest() {
+    void blogApiCrudTest() {
         UserEntity testUser = createTestUser();
         UserEntity testUser2 = createTestUser2();
         userSessionService.newSession(testUser.getUsername(), "session", "ua", "key");
@@ -630,23 +630,16 @@ class RestApiAndWsTest {
         ResponseEntity<Void> getEntry2 = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
         assertEquals(200, getEntry2.getStatusCodeValue());
 
+        blogEntry.setContent("Content2");
+        ResponseEntity<Void> updateEntry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        assertEquals(200, updateEntry.getStatusCodeValue());
+
         ResponseEntity<Void> deleteEntryUserNotMatch = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
         assertEquals(403, deleteEntryUserNotMatch.getStatusCodeValue());
         ResponseEntity<Void> deleteEntry = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
         assertEquals(200, deleteEntry.getStatusCodeValue());
         ResponseEntity<Void> deleteNonExistEntry = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
         assertEquals(404, deleteNonExistEntry.getStatusCodeValue());
-    }
-
-    @Test
-    @Rollback
-    void blogApiGetTest() {
-        UserEntity userEntity = createTestUser();
-        userSessionService.newSession(userEntity.getUsername(), "session", "ua", "key");
-        String token = jwtTokenService.generateToken(userEntity, "session");
-
-        ResponseEntity<Void> getEntry = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/1/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
-        assertEquals(404, getEntry.getStatusCodeValue());
     }
 
     private UserEntity createTestUser() {

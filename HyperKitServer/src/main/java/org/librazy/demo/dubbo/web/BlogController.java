@@ -40,14 +40,15 @@ public class BlogController {
         return ResponseEntity.status(201).header("Location", "/blog/" + blogEntryEntity.getId() + "/").body(result);
     }
 
-    @RequestMapping(value = "/blog/{entryId:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.POST})
+    @RequestMapping(value = "/blog/{entryId:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT, RequestMethod.POST})
     @PreAuthorize("hasRole('USER') && (#blogForm.authorId.toString().equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #blogForm.authorId))")
     public ResponseEntity<Map<String, String>> update(@PathVariable long entryId, @RequestBody BlogEntry blogForm) {
         Map<String, String> result = new HashMap<>();
-        if (entryId != blogForm.getId()) {
+        if ((blogForm.getId() != null) && (entryId != blogForm.getId())) {
             result.put(STATUS, "ERROR");
             return ResponseEntity.badRequest().body(result);
         }
+        blogForm.setId(entryId);
         blogService.update(blogForm);
         return ResponseEntity.ok(result);
     }
