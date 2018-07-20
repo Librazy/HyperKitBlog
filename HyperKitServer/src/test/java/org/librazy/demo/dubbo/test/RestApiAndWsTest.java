@@ -19,9 +19,13 @@ import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
+import org.librazy.demo.dubbo.domain.repo.BlogRepository;
+import org.librazy.demo.dubbo.domain.repo.SrpAccountRepository;
+import org.librazy.demo.dubbo.domain.repo.UserRepository;
 import org.librazy.demo.dubbo.model.*;
 import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.librazy.demo.dubbo.service.SrpSessionService;
+import org.librazy.demo.dubbo.service.UserService;
 import org.librazy.demo.dubbo.service.UserSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -36,8 +40,11 @@ import org.springframework.messaging.simp.stomp.*;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.SocketUtils;
 import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -45,7 +52,8 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.transaction.Transactional;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -62,7 +70,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Rollback
 @AutoConfigureMockMvc
 @ActiveProfiles("test-default")
 class RestApiAndWsTest {
@@ -80,6 +87,9 @@ class RestApiAndWsTest {
     private StatefulRedisConnection<String, String> connection;
     @Autowired(required = false)
     @Reference
+    private UserService userService;
+    @Autowired(required = false)
+    @Reference
     private UserSessionService userSessionService;
     @Autowired(required = false)
     @Reference
@@ -87,6 +97,15 @@ class RestApiAndWsTest {
     @Autowired(required = false)
     @Reference
     private SrpSessionService srpSessionService;
+
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private SrpAccountRepository srpAccountRepository;
+    @Autowired
+    private BlogRepository blogRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     @BeforeAll
     static void startH2Console() throws SQLException {
@@ -101,14 +120,19 @@ class RestApiAndWsTest {
     }
 
     @BeforeEach
-    void cleanRedis() {
+    void clean() {
         connection.sync().flushall();
         srpSessionService.clear();
+        entityManager.clear();
+        blogRepository.deleteAllInBatch();
+        blogRepository.flush();
+        srpAccountRepository.deleteAllInBatch();
+        srpAccountRepository.flush();
+        userRepository.findAll().forEach(userRepository::delete);
+        userRepository.flush();
     }
 
     @Test
-    @Transactional
-    @Rollback
     @SuppressWarnings("unchecked")
     void restApiAndWsTest() throws Exception {
         final String email = "a@b.com";
@@ -372,8 +396,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void fakeAccountCanChallenge() {
         String email = "someone@notexist.com";
         SrpChallengeForm srpChallengeForm = new SrpChallengeForm();
@@ -385,8 +407,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void fakeAccountCannotAuthenticate() {
         String email = "someone@notexist.com";
         SrpSigninForm srpSigninForm = new SrpSigninForm();
@@ -397,8 +417,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void invalidPasswordCannotAuthenticate() {
         String email = "someone@notexist.com";
         SrpSigninForm srpSigninForm = new SrpSigninForm();
@@ -409,8 +427,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void invalidRequestShould400() {
         ResponseEntity<Map> signup = testRestTemplate.postForEntity("/signup", new BadRequestEntity(), Map.class);
         assertEquals(400, signup.getStatusCodeValue());
@@ -431,8 +447,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void requestWithNonBearerAuthWill401() {
         ResponseEntity<Void> req = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, "NotABearer").build(), Void.class);
         assertEquals(401, req.getStatusCodeValue());
@@ -440,8 +454,6 @@ class RestApiAndWsTest {
 
 
     @Test
-    @Transactional
-    @Rollback
     void badWsConnectWithoutAuth() {
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         StompHeaders headers = new StompHeaders();
@@ -486,8 +498,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void signupWithoutCode() {
         final String email = "a@b.com";
         final String nick = "nick";
@@ -506,8 +516,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void badRegister() throws IOException {
         final String email = "a@b.com";
         final String password = "password";
@@ -558,8 +566,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void goodRegisterWithDupId() throws IOException, SRP6Exception {
         final String email = "c@b.com";
         final String password = "password";
@@ -601,6 +607,75 @@ class RestApiAndWsTest {
         registerForm.setPassword(signupSession.getClientEvidenceMessage() + ":" + signupSession.getPublicClientValue());
         ResponseEntity<Map> register = testRestTemplate.postForEntity("/register", registerForm, Map.class);
         assertEquals(400, register.getStatusCodeValue());
+    }
 
+    @Test
+    @Rollback
+    void blogApiCreateDeleteTest() {
+        UserEntity testUser = createTestUser();
+        UserEntity testUser2 = createTestUser2();
+        userSessionService.newSession(testUser.getUsername(), "session", "ua", "key");
+        userSessionService.newSession(testUser2.getUsername(), "session", "ua", "key");
+        String token = jwtTokenService.generateToken(testUser, "session");
+        String token2 = jwtTokenService.generateToken(testUser2, "session");
+
+        BlogEntry blogEntry = new BlogEntry();
+        blogEntry.setTitle("Title");
+        blogEntry.setContent("Content");
+        blogEntry.setAuthorId(testUser.getId());
+        ResponseEntity<Void> createEntry = testRestTemplate.exchange(RequestEntity.post(URI.create("/blog/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        assertEquals(201, createEntry.getStatusCodeValue());
+        URI location = createEntry.getHeaders().getLocation();
+        assertNotNull(location);
+        assertTrue(location.toString().matches("\\/blog\\/\\d+\\/"));
+
+        ResponseEntity<Void> getEntry = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(200, getEntry.getStatusCodeValue());
+        ResponseEntity<Void> getEntry2 = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
+        assertEquals(200, getEntry2.getStatusCodeValue());
+
+        ResponseEntity<Void> deleteEntryUserNotMatch = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
+        assertEquals(403, deleteEntryUserNotMatch.getStatusCodeValue());
+        ResponseEntity<Void> deleteEntry = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(200, deleteEntry.getStatusCodeValue());
+        ResponseEntity<Void> deleteNonExistEntry = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(404, deleteNonExistEntry.getStatusCodeValue());
+    }
+
+    @Test
+    @Rollback
+    void blogApiGetTest() {
+        UserEntity userEntity = createTestUser();
+        userSessionService.newSession(userEntity.getUsername(), "session", "ua", "key");
+        String token = jwtTokenService.generateToken(userEntity, "session");
+
+        ResponseEntity<Void> getEntry = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/1/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(404, getEntry.getStatusCodeValue());
+    }
+
+    private UserEntity createTestUser() {
+        final String nick = "test";
+        final String email = "c@b.test";
+
+        SrpSignupForm signupForm = new SrpSignupForm();
+        signupForm.setNick(nick);
+        signupForm.setEmail(email);
+        signupForm.setVerifier("some");
+        signupForm.setSalt("salt");
+        signupForm.setCode("1234");
+        return userService.registerUser(signupForm);
+    }
+
+    private UserEntity createTestUser2() {
+        final String nick = "test2";
+        final String email = "c2@b.test";
+
+        SrpSignupForm signupForm = new SrpSignupForm();
+        signupForm.setNick(nick);
+        signupForm.setEmail(email);
+        signupForm.setVerifier("some2");
+        signupForm.setSalt("salt2");
+        signupForm.setCode("1334");
+        return userService.registerUser(signupForm);
     }
 }

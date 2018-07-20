@@ -53,7 +53,6 @@ public class HomeController {
 
     private static Logger logger = LoggerFactory.getLogger(HomeController.class);
 
-
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     public HomeController(JwtConfigParams jwtConfigParams, UserService userService, @Autowired(required = false) JwtTokenService jwtTokenService, @Autowired(required = false) UserSessionService userSessionService) {

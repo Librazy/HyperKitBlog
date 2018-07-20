@@ -4,7 +4,9 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.jetbrains.annotations.NotNull;
+import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.service.JwtTokenService;
+import org.librazy.demo.dubbo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +26,7 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
-    private final UserDetailsService userDetailsService;
+    private final UserService userService;
 
     private final JwtConfigParams jwtConfigParams;
 
@@ -33,9 +35,9 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
-    public JwtAuthenticationTokenFilter(JwtConfigParams jwtConfigParams, @Qualifier("userServiceImpl") UserDetailsService userDetailsService, @Autowired(required = false) JwtTokenService jwtTokenService) {
+    public JwtAuthenticationTokenFilter(JwtConfigParams jwtConfigParams, UserService userService, @Autowired(required = false) JwtTokenService jwtTokenService) {
         this.jwtConfigParams = jwtConfigParams;
-        this.userDetailsService = userDetailsService;
+        this.userService = userService;
         this.jwtTokenService = jwtTokenService;
     }
 
@@ -53,7 +55,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
                 Claims claims = Jwts.claims(jwtTokenService.validateClaimsFromToken(authToken));
                 String id = claims.getSubject();
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(id);
+                UserEntity userDetails = this.userService.loadUserByUsername(id);
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
