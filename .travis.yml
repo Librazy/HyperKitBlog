@@ -8,6 +8,10 @@ before_script:
 - fossa
 - sed -i "s/\/\/compile\sproject/compile\ project/g" `grep "\/\/compile\sproject" -rl .`
 - ./cc-test-reporter before-build
+addons:
+  sonarcloud:
+    organization: "librazy-github"
+    token: $SONAR_TOKEN
 script:
 - ./gradlew clean build jacocoFullReport
 - mkdir ccJacoco
