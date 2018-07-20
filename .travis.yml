@@ -1,25 +1,16 @@
 language: java
 install:
 - sudo ./install_fossa.sh
-- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-- chmod +x ./cc-test-reporter
 before_script:
 - sed -i "s/compile\sproject/\/\/compile\ project/g" `grep "compile\sproject" -rl .`
 - fossa
 - sed -i "s/\/\/compile\sproject/compile\ project/g" `grep "\/\/compile\sproject" -rl .`
-- ./cc-test-reporter before-build
 addons:
   sonarcloud:
     organization: "librazy-github"
     token: $SONAR_TOKEN
 script:
 - ./gradlew clean build jacocoFullReport
-- mkdir ccJacoco
-- cp build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml ccJacoco/jacoco.xml
-- cp -rf HyperKit*/src/main/java/* ccJacoco/
-- cd ccJacoco
-- ../cc-test-reporter after-build -t jacoco
-- cd ..
 - ./gradlew jacocoMerge sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
 after_success:
 - fossa test
