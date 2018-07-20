@@ -39,7 +39,7 @@ dependencies {
     compile 'io.jsonwebtoken:jjwt:0.9.1'
     compile 'org.apache.tomcat.embed:tomcat-embed-core:9.0.10'
     compile "org.bitbucket.simon_massey:thinbus-srp6a-js:$thinbusVersion"
-    compile 'org.hibernate:hibernate-validator:6.0.10.Final'
+    compile 'org.hibernate:hibernate-validator:6.0.11.Final'
     compile 'org.jetbrains:annotations:16.0.2'
     compile "org.springframework:spring-beans:$springVersion"
     compile "org.springframework:spring-context:$springVersion"
