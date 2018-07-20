@@ -4,19 +4,12 @@ import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.domain.repo.BlogRepository;
 import org.librazy.demo.dubbo.model.BlogEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.util.List;
-
 @Service
 public class BlogServiceImpl implements BlogService {
-
-    private static Logger log = LoggerFactory.getLogger(BlogServiceImpl.class);
 
     private final BlogRepository blogRepository;
 

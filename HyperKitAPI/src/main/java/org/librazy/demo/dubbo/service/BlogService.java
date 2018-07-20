@@ -1,7 +1,5 @@
 package org.librazy.demo.dubbo.service;
 
-import java.util.List;
-
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.BlogEntry;

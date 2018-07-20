@@ -5,16 +5,12 @@ import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.BlogEntry;
 import org.librazy.demo.dubbo.service.BlogService;
 import org.librazy.demo.dubbo.service.UserService;
-import org.springframework.beans.PropertyAccessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.BindingErrorProcessor;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityNotFoundException;
 import java.beans.PropertyEditorSupport;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +63,7 @@ public class BlogController {
 
     @GetMapping("/blog/{entry:\\d+}/")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<BlogEntry> get(@PathVariable BlogEntryEntity entry){
+    public ResponseEntity<BlogEntry> get(@PathVariable BlogEntryEntity entry) {
         return ResponseEntity.ok(BlogEntry.fromEntity(entry));
     }
 
