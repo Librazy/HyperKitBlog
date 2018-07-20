@@ -63,7 +63,6 @@ public class BlogController {
     }
 
     @GetMapping("/blog/{entry:\\d+}/")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<BlogEntry> get(@PathVariable BlogEntryEntity entry) {
         return ResponseEntity.ok(BlogEntry.fromEntity(entry));
     }
