@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 public interface UserService extends UserDetailsService {
     @Override
     @Transactional(readOnly = true)
-    UserDetails loadUserByUsername(String id);
+    UserEntity loadUserByUsername(String id);
 
     @Transactional
     UserEntity registerUser(SrpSignupForm signupForm);

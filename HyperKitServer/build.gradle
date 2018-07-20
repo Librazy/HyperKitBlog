@@ -78,6 +78,5 @@ bootRun {
 test {
     useJUnitPlatform()
     environment 'spring.profiles.active', 'test-default'
-    //testLogging.showStandardStreams = true
     testLogging.exceptionFormat = 'full'
 }

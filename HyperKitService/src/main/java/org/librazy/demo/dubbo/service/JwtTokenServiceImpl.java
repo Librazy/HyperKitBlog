@@ -17,7 +17,6 @@ import java.util.Map;
         interfaceClass = JwtTokenService.class
 )
 @Component
-@org.springframework.stereotype.Service
 public class JwtTokenServiceImpl implements JwtTokenService, Serializable {
 
     private static final long serialVersionUID = -3301605591108950415L;

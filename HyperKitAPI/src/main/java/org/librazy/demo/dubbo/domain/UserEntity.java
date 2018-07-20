@@ -1,16 +1,23 @@
 package org.librazy.demo.dubbo.domain;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.AntPathMatcher;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table
-public class UserEntity implements Serializable {
+public class UserEntity implements UserDetails, Serializable {
 
     private static final long serialVersionUID = -3527158508891454204L;
 
@@ -38,13 +45,14 @@ public class UserEntity implements Serializable {
     private String bio;
 
     @Column
-    @ElementCollection
-    private List<String> role = new ArrayList<>(Collections.singleton("ROLE_USER"));
+    @OrderColumn
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> roles = new ArrayList<>(Collections.singleton("ROLE_USER"));
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
     private SrpAccountEntity srpAccount;
 
-    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, mappedBy = "author", orphanRemoval = true)
+    @OneToMany(cascade = {CascadeType.DETACH, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "author", orphanRemoval = true)
     private List<BlogEntryEntity> blogEntries;
 
     @ManyToMany(mappedBy = "stargazers")
@@ -110,12 +118,20 @@ public class UserEntity implements Serializable {
         this.avatar = avatar;
     }
 
-    public List<String> getRole() {
-        return role;
+    public List<String> getRoles() {
+        return roles;
     }
 
-    public void setRole(List<String> role) {
-        this.role = role;
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
+
+    public boolean hasRole(String requirement) {
+        return roles.contains(requirement);
+    }
+
+    public boolean matchRole(String requirement) {
+        return roles.parallelStream().anyMatch(role -> new AntPathMatcher(".").match(role, requirement));
     }
 
     public Timestamp getVersion() {
@@ -174,5 +190,44 @@ public class UserEntity implements Serializable {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return getRoles().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
+    }
+
+    @Override
+    public String getPassword() {
+        return null;
+    }
+
+    @Override
+    public String getUsername() {
+        return String.valueOf(id);
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+    public static UserEntity cast(UserDetails userDetails) {
+        return (UserEntity) userDetails;
     }
 }
