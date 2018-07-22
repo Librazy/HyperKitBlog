@@ -619,9 +619,10 @@ class RestApiAndWsTest {
         blogEntry.setTitle("Title");
         blogEntry.setContent("Content");
         blogEntry.setAuthorId(testUser.getId());
-        ResponseEntity<Void> createEntry = testRestTemplate.exchange(RequestEntity.post(URI.create("/blog/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        ResponseEntity<Map> createEntry = testRestTemplate.exchange(RequestEntity.post(URI.create("/blog/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Map.class);
         assertEquals(201, createEntry.getStatusCodeValue());
         URI location = createEntry.getHeaders().getLocation();
+        long id = Long.parseLong((String) createEntry.getBody().get("id"));
         assertNotNull(location);
         assertTrue(location.toString().matches("\\/blog\\/\\d+\\/"));
 
@@ -633,6 +634,16 @@ class RestApiAndWsTest {
         blogEntry.setContent("Content2");
         ResponseEntity<Void> updateEntry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
         assertEquals(200, updateEntry.getStatusCodeValue());
+
+        blogEntry.setId(id);
+        blogEntry.setContent("Content3");
+        ResponseEntity<Void> update2Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        assertEquals(200, update2Entry.getStatusCodeValue());
+
+        blogEntry.setId(id + 1);
+        blogEntry.setContent("Content4");
+        ResponseEntity<Void> update3Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        assertEquals(400, update3Entry.getStatusCodeValue());
 
         ResponseEntity<Void> deleteEntryUserNotMatch = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
         assertEquals(403, deleteEntryUserNotMatch.getStatusCodeValue());
