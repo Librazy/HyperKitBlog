@@ -14,19 +14,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.beans.PropertyEditorSupport;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
 public class UserController {
 
-    private static final String STATUS = "status";
-    private static final String ERROR = "error";
-
     private final UserService userService;
+
     private final BlogService blogService;
 
     @Autowired
@@ -38,15 +34,13 @@ public class UserController {
     @RequestMapping(value = "/user/{userId:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT,
             RequestMethod.POST})
     @PreAuthorize("hasRole('USER') && (#userId.equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #userId))")
-    public ResponseEntity<Map<String, String>> update(@PathVariable long userId, @RequestBody UserForm userForm) {
-        Map<String, String> result = new HashMap<>();
+    public ResponseEntity<Void> update(@PathVariable long userId, @RequestBody UserForm userForm) {
         if ((userForm.getId() != null) && (userId != userForm.getId())) {
-            result.put(STATUS, "ERROR");
-            return ResponseEntity.badRequest().body(result);
+            return ResponseEntity.badRequest().build();
         }
         userForm.setId(userId);
         userService.update(userForm);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/user/{userId:\\d+}/")
