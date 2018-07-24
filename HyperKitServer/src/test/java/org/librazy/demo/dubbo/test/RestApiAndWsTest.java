@@ -621,7 +621,7 @@ class RestApiAndWsTest {
         ResponseEntity<Map> createEntry = testRestTemplate.exchange(RequestEntity.post(URI.create("/blog/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Map.class);
         assertEquals(201, createEntry.getStatusCodeValue());
         URI location = createEntry.getHeaders().getLocation();
-        long id = Long.parseLong((String) Objects.requireNonNull(createEntry.getBody()).get("id"));
+        Long id = Long.parseLong((String) Objects.requireNonNull(createEntry.getBody()).get("id"));
         assertNotNull(location);
         assertTrue(location.toString().matches("/blog/\\d+/"));
 
@@ -645,6 +645,7 @@ class RestApiAndWsTest {
         List<BlogEntrySearchResult> searchResults = search.getBody();
         assertNotNull(searchResults);
         assertEquals(1, searchResults.size());
+        assertEquals(id, searchResults.get(0).getId());
         assertTrue(searchResults.get(0).getContent().contains("<em>"));
 
         blogEntry.setId(id + 1);
