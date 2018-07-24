@@ -31,16 +31,15 @@ public class UserController {
         this.blogService = blogService;
     }
 
-    @RequestMapping(value = "/user/{user:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT,
-            RequestMethod.POST})
+    @RequestMapping(value = "/user/{user:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT})
     @PreAuthorize("hasRole('USER') && (#user.username.equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #user.username))")
-    public ResponseEntity<Void> update(@PathVariable UserEntity user, @RequestBody User userForm) {
+    public ResponseEntity<User> update(@PathVariable UserEntity user, @RequestBody User userForm) {
         if (userForm.getId() != null && user.getId() != userForm.getId() || userForm.getEmail() != null && !user.getEmail().equals(userForm.getEmail())
         ) {
             return ResponseEntity.badRequest().build();
         }
-        userService.update(user, userForm);
-        return ResponseEntity.ok().build();
+        UserEntity update = userService.update(user, userForm);
+        return ResponseEntity.ok().body(User.fromEntity(update));
     }
 
     @GetMapping("/user/{user:\\d+}/")

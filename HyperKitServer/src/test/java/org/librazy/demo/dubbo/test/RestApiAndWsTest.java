@@ -33,12 +33,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.SocketUtils;
 import org.springframework.util.concurrent.ListenableFuture;
@@ -50,15 +53,20 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.persistence.EntityManager;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ExtendWith(SpringExtension.class)
@@ -628,23 +636,23 @@ class RestApiAndWsTest {
         assertNotNull(location);
         assertTrue(location.toString().matches("/blog/\\d+/"));
 
-        ResponseEntity<Void> getEntry = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        ResponseEntity<BlogEntry> getEntry = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), BlogEntry.class);
         assertEquals(200, getEntry.getStatusCodeValue());
-        ResponseEntity<Void> getEntry2 = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
+        ResponseEntity<BlogEntry> getEntry2 = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), BlogEntry.class);
         assertEquals(200, getEntry2.getStatusCodeValue());
 
         blogEntry.setContent("Content keyword and 2");
-        ResponseEntity<Void> updateEntry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        ResponseEntity<BlogEntry> updateEntry = testRestTemplate.exchange(RequestEntity.put(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), BlogEntry.class);
         assertEquals(200, updateEntry.getStatusCodeValue());
 
         blogEntry.setId(id);
         blogEntry.setContent("Content keyword and 3");
-        ResponseEntity<Void> update2Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        ResponseEntity<BlogEntry> update2Entry = testRestTemplate.exchange(RequestEntity.put(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), BlogEntry.class);
         assertEquals(200, update2Entry.getStatusCodeValue());
 
         blogEntry.setId(id + 1);
         blogEntry.setContent("Content keyword and 4");
-        ResponseEntity<Void> update3Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        ResponseEntity<BlogEntry> update3Entry = testRestTemplate.exchange(RequestEntity.put(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), BlogEntry.class);
         assertEquals(400, update3Entry.getStatusCodeValue());
 
         ResponseEntity<Void> deleteEntryUserNotMatch = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
@@ -687,6 +695,19 @@ class RestApiAndWsTest {
         // 不允许重复删除关注
         ResponseEntity<Void> deleteFollowing2 = testRestTemplate.exchange(RequestEntity.delete(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
         assertEquals(409, deleteFollowing2.getStatusCodeValue());
+    }
+
+    @Test
+    void createSpringfoxSwaggerJson() throws Exception {
+        String outputDir = System.getProperty("io.springfox.staticdocs.outputDir");
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity("/v2/api-docs", String.class);
+        assertEquals(200, responseEntity.getStatusCodeValue());
+
+        String swaggerJson = responseEntity.getBody();
+        Files.createDirectories(Paths.get(outputDir));
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputDir, "swagger.json"), StandardCharsets.UTF_8)){
+            writer.write(swaggerJson);
+        }
     }
 
     private UserEntity createTestUser() {

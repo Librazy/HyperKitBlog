@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -54,7 +55,7 @@ public class HomeController {
     }
 
     @PostMapping("refresh")
-    public ResponseEntity<JwtResult> refresh(@Valid @RequestBody JwtRefreshForm form, @RequestHeader("Authorization") String auth, Principal sender) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public ResponseEntity<JwtResult> refresh(@Valid @RequestBody JwtRefreshForm form, @RequestHeader("Authorization") String auth, @ApiIgnore Principal sender) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         String jwt = auth.substring(jwtConfigParams.tokenHead.length() + 1);
         Claims claims = Jwts.claims(jwtTokenService.validateClaimsFromToken(jwt));
         String sid = (String) claims.get("jti");
