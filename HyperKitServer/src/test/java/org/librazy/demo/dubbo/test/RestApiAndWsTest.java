@@ -46,6 +46,8 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
+import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
+import pl.allegro.tech.embeddedelasticsearch.IndexSettings;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -69,6 +71,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class RestApiAndWsTest {
 
     private static Server h2Server;
+
+    private static EmbeddedElastic embeddedElastic;
+
     @LocalServerPort
     private int port;
     @Autowired
@@ -102,14 +107,31 @@ class RestApiAndWsTest {
     private EntityManager entityManager;
 
     @BeforeAll
-    static void startH2Console() throws SQLException {
+    static void start() throws SQLException {
         h2Server = Server.createWebServer("-web",
                 "-webAllowOthers", "-webPort", String.valueOf(SocketUtils.findAvailableTcpPort()));
         h2Server.start();
+        embeddedElastic =
+                EmbeddedElastic.builder()
+                               .withElasticVersion("6.3.1")
+                               .withEsJavaOpts("-Xms128m -Xmx512m")
+                               .withPlugin("https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.3.0/elasticsearch-analysis-ik-6.3.0.zip")
+                               .withIndex("blogs", IndexSettings
+                                                           .builder()
+                                                           .withType("entry",
+                                                                   "        \"properties\": {\n" +
+                                                                           "            \"content\": {\n" +
+                                                                           "                \"type\": \"text\",\n" +
+                                                                           "                \"analyzer\": \"ik_max_word\",\n" +
+                                                                           "                \"search_analyzer\": \"ik_max_word\"\n" +
+                                                                           "            }\n" +
+                                                                           "        }")
+                                                           .build())
+                               .build();
     }
 
     @AfterAll
-    static void stopH2Console() {
+    static void stop() {
         h2Server.stop();
     }
 
@@ -638,7 +660,8 @@ class RestApiAndWsTest {
         ResponseEntity<Void> update2Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
         assertEquals(200, update2Entry.getStatusCodeValue());
 
-        ResponseEntity<List<BlogEntrySearchResult>> search = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/search?q=keyword")).build(), new ParameterizedTypeReference<List<BlogEntrySearchResult>>(){});
+        ResponseEntity<List<BlogEntrySearchResult>> search = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/search?q=keyword")).build(), new ParameterizedTypeReference<List<BlogEntrySearchResult>>() {
+        });
         assertEquals(200, search.getStatusCodeValue());
         List<BlogEntrySearchResult> searchResults = search.getBody();
         assertNotNull(searchResults);

@@ -68,6 +68,7 @@ dependencies {
     testCompile "org.springframework.security:spring-security-test:$springSecurityVersion"
     testRuntime "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
     testRuntime "org.junit.vintage:junit-vintage-engine:$junitVersion"
+    testCompile 'pl.allegro.tech:embedded-elasticsearch:2.7.0'
 }
 
 compileJava {
