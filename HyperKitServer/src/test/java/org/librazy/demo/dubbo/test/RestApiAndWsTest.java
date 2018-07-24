@@ -46,15 +46,11 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
-import pl.allegro.tech.embeddedelasticsearch.IndexSettings;
-import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.persistence.EntityManager;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -107,7 +103,7 @@ class RestApiAndWsTest {
     private EntityManager entityManager;
 
     @BeforeAll
-    static void start() throws SQLException, IOException, InterruptedException {
+    static void start() throws SQLException {
         h2Server = Server.createWebServer("-web",
                 "-webAllowOthers", "-webPort", String.valueOf(SocketUtils.findAvailableTcpPort()));
         h2Server.start();

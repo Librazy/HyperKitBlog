@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        if (System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
+        if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
     }
     dependencies {
         classpath 'com.netflix.nebula:gradle-lint-plugin:9.3.4'
@@ -17,7 +17,7 @@ apply plugin: 'com.palantir.jacoco-full-report'
 apply from: './ColoredOutput.gradle'
 project.ext.set("TRAVIS_FOLDING", true)
 
-repositories { if (System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()} }
+repositories { if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()} }
 
 allprojects {
     apply plugin: 'jacoco'
