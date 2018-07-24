@@ -1,7 +1,6 @@
 package org.librazy.demo.dubbo.service;
 
 import com.alibaba.dubbo.config.annotation.Service;
-
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
@@ -67,45 +66,51 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-	@Override
+    @Override
     @Transactional
     public UserEntity update(UserForm userForm) {
-		UserEntity old = loadUserByUsername(String.valueOf(userForm.getId()));
+        UserEntity old = loadUserByUsername(String.valueOf(userForm.getId()));
         old.setAvatar(userForm.getAvatar());
         old.setBio(userForm.getBio());
         old.setNick(userForm.getNick());
-        return userRepository.save(old);
-	}
+        return userRepository.saveAndFlush(old);
+    }
 
-	@Override
+    @Override
     @Transactional
-    public void addStarredEntries(UserEntity user, BlogEntryEntity blog) {
-		user.addStarredEntries(blog);
-		userRepository.save(user);
-		blogRepository.save(blog);
-	}
+    public boolean addStarredEntries(UserEntity user, BlogEntryEntity blog) {
+        boolean addStarredEntries = user.addStarredEntries(blog);
+        userRepository.saveAndFlush(user);
+        blogRepository.saveAndFlush(blog);
+        return addStarredEntries;
+    }
 
-	@Override
-	public void removeStarredEntries(UserEntity user, BlogEntryEntity blog) {
-		user.removeStarredEntries(blog);
-		userRepository.save(user);
-		blogRepository.save(blog);
-	}
+    @Override
+    public boolean removeStarredEntries(UserEntity user, BlogEntryEntity blog) {
+        boolean removeStarredEntries = user.removeStarredEntry(blog);
+        userRepository.saveAndFlush(user);
+        blogRepository.saveAndFlush(blog);
+        return removeStarredEntries;
+    }
 
-	@Override
+    @Override
     @Transactional
-    public void addFollowing(UserEntity following, UserEntity followed) {
-		following.addFollowing(followed);
-		userRepository.save(followed);
-		userRepository.save(following);
-	}
+    public boolean addFollowing(UserEntity following, UserEntity followed) {
+        boolean addFollowing = following.addFollowing(followed);
+        userRepository.save(followed);
+        userRepository.save(following);
+        userRepository.flush();
+        return addFollowing;
+    }
 
-	@Override
+    @Override
     @Transactional
-    public void removeFollowing(UserEntity following, UserEntity followed) {
-		following.removeFollowing(followed);
-		userRepository.save(followed);
-		userRepository.save(following);
-	}
+    public boolean removeFollowing(UserEntity following, UserEntity followed) {
+        boolean removeFollowing = following.removeFollowing(followed);
+        userRepository.save(followed);
+        userRepository.save(following);
+        userRepository.flush();
+        return removeFollowing;
+    }
 
 }

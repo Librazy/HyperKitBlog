@@ -61,6 +61,32 @@ public class WebSocketSecurityConfig
         registration.interceptors(new AuthChannelInterceptor());
     }
 
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/stomp").setAllowedOrigins("*");
+    }
+
+    @Override
+    protected void configureInbound(MessageSecurityMetadataSourceRegistry messages) {
+        messages.simpTypeMatchers(SimpMessageType.CONNECT).permitAll()
+                .nullDestMatcher().authenticated()
+                .simpDestMatchers("/topic/broadcast").hasRole("USER")
+                .simpDestMatchers("/app/**").hasRole("USER")
+                .anyMessage().denyAll();
+
+    }
+
+    @Override
+    protected boolean sameOriginDisabled() {
+        return true;
+    }
+
     class AuthChannelInterceptor implements ChannelInterceptor {
         @Override
         public Message<?> preSend(@NotNull Message<?> message, MessageChannel channel) {
@@ -93,32 +119,5 @@ public class WebSocketSecurityConfig
                     userDetails, null, userDetails.getAuthorities());
             accessor.setUser(authentication);
         }
-    }
-
-
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic");
-        config.setApplicationDestinationPrefixes("/app");
-    }
-
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/stomp").setAllowedOrigins("*");
-    }
-
-    @Override
-    protected void configureInbound(MessageSecurityMetadataSourceRegistry messages) {
-        messages.simpTypeMatchers(SimpMessageType.CONNECT).permitAll()
-                .nullDestMatcher().authenticated()
-                .simpDestMatchers("/topic/broadcast").hasRole("USER")
-                .simpDestMatchers("/app/**").hasRole("USER")
-                .anyMessage().denyAll();
-
-    }
-
-    @Override
-    protected boolean sameOriginDisabled() {
-        return true;
     }
 }

@@ -21,22 +21,19 @@ public interface UserService extends UserDetailsService {
 
     @Transactional(readOnly = true)
     UserEntity findByEmail(String email);
-    
+
     @Transactional
     UserEntity update(UserForm userForm);
-    
-    @Transactional 
-    void addStarredEntries(UserEntity user, BlogEntryEntity blog);
-    
-    @Transactional 
-    void removeStarredEntries(UserEntity user, BlogEntryEntity blog);
-    
-    @Transactional 
-    //userFollowed is followed by userFollowing
-    void addFollowing(UserEntity following, UserEntity followed);
-    
-    @Transactional 
-    void removeFollowing(UserEntity following, UserEntity followed);
-    
-    
+
+    @Transactional
+    boolean addStarredEntries(UserEntity user, BlogEntryEntity blog);
+
+    @Transactional
+    boolean removeStarredEntries(UserEntity user, BlogEntryEntity blog);
+
+    @Transactional
+    boolean addFollowing(UserEntity follower, UserEntity following);
+
+    @Transactional
+    boolean removeFollowing(UserEntity follower, UserEntity following);
 }

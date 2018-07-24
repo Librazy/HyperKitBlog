@@ -7,20 +7,20 @@ import java.security.SecureRandom;
 
 public class SecurityInstanceUtils {
 
-    private SecurityInstanceUtils(){
+    private static SecureRandom strongRandom;
+
+    private SecurityInstanceUtils() {
         throw new UnsupportedOperationException();
     }
 
-    private static SecureRandom strongRandom;
-
-    public static  MessageDigest getSha256() {
+    public static MessageDigest getSha256() {
         return DigestUtils.getSha256Digest();
     }
 
     public static MessageDigest getSha512() {
         return DigestUtils.getSha512Digest();
     }
-    
+
     public static SecureRandom getStrongRandom() {
         return strongRandom;
     }

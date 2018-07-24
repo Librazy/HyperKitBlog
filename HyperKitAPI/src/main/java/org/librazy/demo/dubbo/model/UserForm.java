@@ -22,7 +22,7 @@ public class UserForm implements Serializable {
     private String bio;
 
     protected UserForm() {
-    	
+
     }
 
     public UserForm(String email, String nick) {
@@ -35,15 +35,19 @@ public class UserForm implements Serializable {
         this.email = email;
     }
 
-    public UserForm(UserEntity userEntity){
-    	this(userEntity.getId(), userEntity.getEmail());
-    	this.avatar=userEntity.getAvatar();
-    	this.bio=userEntity.getBio();
-    	this.nick=userEntity.getNick();
+    public UserForm(UserEntity userEntity) {
+        this(userEntity.getId(), userEntity.getEmail());
+        this.avatar = userEntity.getAvatar();
+        this.bio = userEntity.getBio();
+        this.nick = userEntity.getNick();
     }
-    
+
     public Long getId() {
         return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     protected void setId(Long id) {
@@ -89,13 +93,6 @@ public class UserForm implements Serializable {
     public void setBio(String bio) {
         this.bio = bio;
     }
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-
-
 
 
 }

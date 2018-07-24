@@ -18,7 +18,7 @@ public class ExceptionControllerAdvice {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Void> handle(RuntimeException ex) {
         logger.warn("exception in controller: ", ex);
-        if(NestedExceptionUtils.getMostSpecificCause(ex).getClass().equals(EntityNotFoundException.class)){
+        if (NestedExceptionUtils.getMostSpecificCause(ex).getClass().equals(EntityNotFoundException.class)) {
             return ResponseEntity.notFound().build();
         }
         throw ex;
