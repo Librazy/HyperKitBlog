@@ -85,8 +85,6 @@ gradle-app.setting
 !/gradle/wrapper/gradle-wrapper.properties
 /src/main/resources/webjars/
 /classes/
-ccJacoco/
-
 .project
 
 **/*.prefs
