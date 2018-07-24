@@ -40,18 +40,13 @@ public class HomeController {
     private static final String OK = "ok";
 
     private static final String ERROR = "error";
-
+    private static Logger logger = LoggerFactory.getLogger(HomeController.class);
     private final JwtConfigParams jwtConfigParams;
-
     private final UserService userService;
-
     @Reference
     private JwtTokenService jwtTokenService;
-
     @Reference
     private UserSessionService userSessionService;
-
-    private static Logger logger = LoggerFactory.getLogger(HomeController.class);
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired

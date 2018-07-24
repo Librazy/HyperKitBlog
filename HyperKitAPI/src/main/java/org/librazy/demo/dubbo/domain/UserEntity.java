@@ -9,10 +9,9 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
@@ -47,23 +46,23 @@ public class UserEntity implements UserDetails, Serializable {
     @Column
     @OrderColumn
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> roles = new ArrayList<>(Collections.singleton("ROLE_USER"));
+    private Set<String> roles = Collections.singleton("ROLE_USER");
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
     private SrpAccountEntity srpAccount;
 
     @OneToMany(cascade = {CascadeType.DETACH, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "author", orphanRemoval = true)
-    private List<BlogEntryEntity> blogEntries;
+    private Set<BlogEntryEntity> blogEntries;
 
     @ManyToMany(mappedBy = "stargazers")
-    private List<BlogEntryEntity> starredEntries;
+    private Set<BlogEntryEntity> starredEntries;
 
     @ManyToMany(mappedBy = "followers")
-    private List<UserEntity> following;
+    private Set<UserEntity> following;
 
     @ManyToMany
     @JoinTable
-    private List<UserEntity> followers;
+    private Set<UserEntity> followers;
 
     protected UserEntity() {
     }
@@ -76,6 +75,10 @@ public class UserEntity implements UserDetails, Serializable {
     public UserEntity(long id, String email) {
         this.id = id;
         this.email = email;
+    }
+
+    public static UserEntity cast(UserDetails userDetails) {
+        return (UserEntity) userDetails;
     }
 
     public long getId() {
@@ -118,11 +121,11 @@ public class UserEntity implements UserDetails, Serializable {
         this.avatar = avatar;
     }
 
-    public List<String> getRoles() {
+    public Set<String> getRoles() {
         return roles;
     }
 
-    public void setRoles(List<String> roles) {
+    public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
 
@@ -142,65 +145,66 @@ public class UserEntity implements UserDetails, Serializable {
         this.version = version;
     }
 
-    public List<BlogEntryEntity> getBlogEntries() {
+    public Set<BlogEntryEntity> getBlogEntries() {
         return blogEntries;
     }
 
-    public void setBlogEntries(List<BlogEntryEntity> blogEntries) {
+    public void setBlogEntries(Set<BlogEntryEntity> blogEntries) {
         this.blogEntries = blogEntries;
     }
 
-    public List<BlogEntryEntity> getStarredEntries() {
+    public Set<BlogEntryEntity> getStarredEntries() {
         return starredEntries;
     }
 
-    public void setStarredEntries(List<BlogEntryEntity> starredEntries) {
+    public void setStarredEntries(Set<BlogEntryEntity> starredEntries) {
         this.starredEntries = starredEntries;
     }
 
-    public void addStarredEntries(BlogEntryEntity starred) {
-        this.starredEntries.add(starred);
+    public boolean addStarredEntries(BlogEntryEntity starred) {
         starred.getStargazers().add(this);
+        return this.starredEntries.add(starred);
+
     }
 
-    public void removeStarredEntries(BlogEntryEntity starred) {
-        this.starredEntries.remove(starred);
+    public boolean removeStarredEntry(BlogEntryEntity starred) {
         starred.getStargazers().remove(this);
+        return this.starredEntries.remove(starred);
     }
 
-    public void addFollowers(UserEntity user){
-    	this.followers.add(user);
-    	user.getFollowing().add(this);
+    public boolean addFollowers(UserEntity user) {
+        user.getFollowing().add(this);
+        return this.followers.add(user);
     }
-    
-    public void removeFollowers(UserEntity user){
-    	this.followers.remove(user);
-    	user.getFollowing().remove(this);
+
+    public boolean removeFollower(UserEntity user) {
+        user.getFollowing().remove(this);
+        return this.followers.remove(user);
     }
-    
-    public void addFollowing(UserEntity user){
-    	this.following.add(user);
-    	user.getFollowers().add(this);
+
+    public boolean addFollowing(UserEntity user) {
+        user.getFollowers().add(this);
+        return this.following.add(user);
     }
-    
-    public void removeFollowing(UserEntity user){
-    	this.following.remove(user);
-    	user.getFollowers().remove(this);
+
+    public boolean removeFollowing(UserEntity user) {
+        user.getFollowers().remove(this);
+        return this.following.remove(user);
     }
-    
-    public List<UserEntity> getFollowing() {
+
+    public Set<UserEntity> getFollowing() {
         return following;
     }
 
-    public void setFollowing(List<UserEntity> following) {
+    public void setFollowing(Set<UserEntity> following) {
         this.following = following;
     }
 
-    public List<UserEntity> getFollowers() {
+    public Set<UserEntity> getFollowers() {
         return followers;
     }
 
-    public void setFollowers(List<UserEntity> followers) {
+    public void setFollowers(Set<UserEntity> followers) {
         this.followers = followers;
     }
 
@@ -245,9 +249,5 @@ public class UserEntity implements UserDetails, Serializable {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    public static UserEntity cast(UserDetails userDetails) {
-        return (UserEntity) userDetails;
     }
 }

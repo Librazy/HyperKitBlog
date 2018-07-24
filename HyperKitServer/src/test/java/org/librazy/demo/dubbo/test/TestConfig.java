@@ -8,7 +8,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 @Configuration
 public class TestConfig {
     @Bean
-    RestTemplateBuilder restTemplateBuilder(){
+    RestTemplateBuilder restTemplateBuilder() {
         return new RestTemplateBuilder().requestFactory(() -> {
             SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
             simpleClientHttpRequestFactory.setOutputStreaming(false);

@@ -37,9 +37,9 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.SocketUtils;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -102,6 +102,8 @@ class RestApiAndWsTest {
     private BlogRepository blogRepository;
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @BeforeAll
     static void startH2Console() throws SQLException {
@@ -120,12 +122,26 @@ class RestApiAndWsTest {
         connection.sync().flushall();
         srpSessionService.clear();
         entityManager.clear();
-        blogRepository.deleteAllInBatch();
-        blogRepository.flush();
-        srpAccountRepository.deleteAllInBatch();
-        srpAccountRepository.flush();
-        userRepository.findAll().forEach(userRepository::delete);
-        userRepository.flush();
+        transactionTemplate.execute((status) -> {
+            blogRepository.deleteAllInBatch();
+            blogRepository.flush();
+            srpAccountRepository.deleteAllInBatch();
+            srpAccountRepository.flush();
+            userRepository.findAll().forEach(
+                    userEntity -> {
+                        userEntity.getFollowing().forEach(
+                                userEntity::removeFollowing
+                        );
+                        userEntity.getStarredEntries().forEach(
+                                userEntity::removeStarredEntry
+                        );
+                    });
+            userRepository.flush();
+            userRepository.findAll().forEach(userRepository::delete);
+            userRepository.flush();
+            status.flush();
+            return null;
+        });
     }
 
     @Test
@@ -437,17 +453,11 @@ class RestApiAndWsTest {
         assertEquals(400, authenticate.getStatusCodeValue());
     }
 
-    class BadRequestEntity {
-        @SuppressWarnings("unused")
-        public String bad;
-    }
-
     @Test
     void requestWithNonBearerAuthWill401() {
         ResponseEntity<Void> req = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, "NotABearer").build(), Void.class);
         assertEquals(401, req.getStatusCodeValue());
     }
-
 
     @Test
     void badWsConnectWithoutAuth() {
@@ -606,7 +616,6 @@ class RestApiAndWsTest {
     }
 
     @Test
-    @Rollback
     void blogApiCrudTest() {
         UserEntity testUser = createTestUser();
         UserEntity testUser2 = createTestUser2();
@@ -653,6 +662,40 @@ class RestApiAndWsTest {
         assertEquals(404, deleteNonExistEntry.getStatusCodeValue());
     }
 
+    @Test
+    void userApiTest() {
+        UserEntity testUser = createTestUser();
+        UserEntity testUser2 = createTestUser2();
+        userSessionService.newSession(testUser.getUsername(), "session", "ua", "key");
+        userSessionService.newSession(testUser2.getUsername(), "session", "ua", "key");
+        String token = jwtTokenService.generateToken(testUser, "session");
+        String token2 = jwtTokenService.generateToken(testUser2, "session");
+
+        // 关注成功
+        ResponseEntity<Void> addFollowing = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(201, addFollowing.getStatusCodeValue());
+
+        // 不允许修改他人关注
+        ResponseEntity<Void> addFollowingBadToken = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
+        assertEquals(403, addFollowingBadToken.getStatusCodeValue());
+
+        // 不允许关注自己
+        ResponseEntity<Void> addFollowingSelf = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(400, addFollowingSelf.getStatusCodeValue());
+
+        // 不允许重复关注
+        ResponseEntity<Void> addFollowing2 = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(409, addFollowing2.getStatusCodeValue());
+
+        // 删除关注成功
+        ResponseEntity<Void> deleteFollowing = testRestTemplate.exchange(RequestEntity.delete(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(204, deleteFollowing.getStatusCodeValue());
+
+        // 不允许重复删除关注
+        ResponseEntity<Void> deleteFollowing2 = testRestTemplate.exchange(RequestEntity.delete(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        assertEquals(409, deleteFollowing2.getStatusCodeValue());
+    }
+
     private UserEntity createTestUser() {
         final String nick = "test";
         final String email = "c@b.test";
@@ -677,5 +720,10 @@ class RestApiAndWsTest {
         signupForm.setSalt("salt2");
         signupForm.setCode("1334");
         return userService.registerUser(signupForm);
+    }
+
+    class BadRequestEntity {
+        @SuppressWarnings("unused")
+        public String bad;
     }
 }

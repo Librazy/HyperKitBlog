@@ -125,7 +125,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
     }
 
     @Override
-    public void clear(){
+    public void clear() {
         session = null;
     }
 }
