@@ -646,7 +646,6 @@ class RestApiAndWsTest {
         assertNotNull(searchResults);
         assertEquals(1, searchResults.size());
         assertTrue(searchResults.get(0).getContent().contains("<em>"));
-        assertTrue(searchResults.get(0).getContent().contains("3"));
 
         blogEntry.setId(id + 1);
         blogEntry.setContent("Content keyword and 4");

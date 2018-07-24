@@ -14,9 +14,6 @@ plugins {
 
 apply plugin: 'com.palantir.jacoco-full-report'
 
-apply from: './ColoredOutput.gradle'
-project.ext.set("TRAVIS_FOLDING", true)
-
 repositories { if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()} }
 
 allprojects {
@@ -25,6 +22,9 @@ allprojects {
     apply plugin: 'nebula.lint' // add as many rules here as you'd like
     gradleLint.alwaysRun = false
     gradleLint.rules = ['all-dependency']
+
+    apply from: "$rootDir/ColoredOutput.gradle"
+    project.ext.set("TRAVIS_FOLDING", true)
 }
 
 // https://cristian.io/post/sonar-coverage/
