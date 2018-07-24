@@ -54,6 +54,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.persistence.EntityManager;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -72,8 +73,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class RestApiAndWsTest {
 
     private static Server h2Server;
-
-    private static EmbeddedElastic embeddedElastic;
 
     @LocalServerPort
     private int port;
@@ -112,32 +111,11 @@ class RestApiAndWsTest {
         h2Server = Server.createWebServer("-web",
                 "-webAllowOthers", "-webPort", String.valueOf(SocketUtils.findAvailableTcpPort()));
         h2Server.start();
-        embeddedElastic =
-                EmbeddedElastic.builder()
-                               .withElasticVersion("6.3.1")
-                               .withCleanInstallationDirectoryOnStop(true)
-                               .withSetting(PopularProperties.HTTP_PORT, 9201)
-                               .withEsJavaOpts("-Xms128m -Xmx512m")
-                               .withPlugin("https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.3.1/elasticsearch-analysis-ik-6.3.1.zip")
-                               .withIndex("blogs", IndexSettings
-                                                           .builder()
-                                                           .withType("entry",
-                                                                   "        \"properties\": {\n" +
-                                                                           "            \"content\": {\n" +
-                                                                           "                \"type\": \"text\",\n" +
-                                                                           "                \"analyzer\": \"ik_max_word\",\n" +
-                                                                           "                \"search_analyzer\": \"ik_max_word\"\n" +
-                                                                           "            }\n" +
-                                                                           "        }")
-                                                           .build())
-                               .build();
-        embeddedElastic.start();
     }
 
     @AfterAll
     static void stop() {
         h2Server.stop();
-        embeddedElastic.stop();
     }
 
     @BeforeEach
