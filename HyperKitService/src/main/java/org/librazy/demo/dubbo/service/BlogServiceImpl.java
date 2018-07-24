@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+
 @Service
 public class BlogServiceImpl implements BlogService {
 
@@ -25,20 +28,25 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public BlogEntryEntity create(UserEntity author, BlogEntry blogForm) {
+    public BlogEntryEntity create(UserEntity author, BlogEntry entry) {
         BlogEntryEntity blogEntryEntity = new BlogEntryEntity(author);
-        blogEntryEntity.setContent(blogForm.getContent());
-        blogEntryEntity.setTitle(blogForm.getTitle());
+        blogEntryEntity.setContent(entry.getContent());
+        blogEntryEntity.setTitle(entry.getTitle());
+        blogEntryEntity.setPublish(Timestamp.from(Instant.now()));
         return blogRepository.save(blogEntryEntity);
     }
 
     @Override
     @Transactional
-    public BlogEntryEntity update(BlogEntry blogForm) {
-        BlogEntryEntity old = get(blogForm.getId());
-        old.setContent(blogForm.getContent());
-        old.setTitle(blogForm.getTitle());
-        return blogRepository.save(old);
+    public BlogEntryEntity update(BlogEntryEntity old, BlogEntry entry) {
+        if (entry.getContent() != null) {
+            old.setContent(entry.getContent());
+        }
+        if (entry.getTitle() != null) {
+            old.setTitle(entry.getTitle());
+        }
+        BlogEntryEntity entity = blogRepository.saveAndFlush(old);
+        return entity;
     }
 
     @Override

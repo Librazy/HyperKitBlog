@@ -6,8 +6,7 @@ import io.jsonwebtoken.Jwts;
 import org.librazy.demo.dubbo.config.JwtConfigParams;
 import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.domain.UserEntity;
-import org.librazy.demo.dubbo.model.JwtRefreshForm;
-import org.librazy.demo.dubbo.model.SrpChallengeForm;
+import org.librazy.demo.dubbo.model.*;
 import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.librazy.demo.dubbo.service.UserService;
 import org.librazy.demo.dubbo.service.UserSessionService;
@@ -29,17 +28,9 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 public class HomeController {
-
-    private static final String STATUS = "status";
-
-    private static final String OK = "ok";
-
-    private static final String ERROR = "error";
     private static Logger logger = LoggerFactory.getLogger(HomeController.class);
     private final JwtConfigParams jwtConfigParams;
     private final UserService userService;
@@ -63,12 +54,11 @@ public class HomeController {
     }
 
     @PostMapping("refresh")
-    public ResponseEntity<Map<String, String>> refresh(@Valid @RequestBody JwtRefreshForm form, @RequestHeader("Authorization") String auth, Principal sender) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public ResponseEntity<JwtResult> refresh(@Valid @RequestBody JwtRefreshForm form, @RequestHeader("Authorization") String auth, Principal sender) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         String jwt = auth.substring(jwtConfigParams.tokenHead.length() + 1);
         Claims claims = Jwts.claims(jwtTokenService.validateClaimsFromToken(jwt));
         String sid = (String) claims.get("jti");
         String key = userSessionService.getKey(sender.getName(), sid);
-        Map<String, String> result = new HashMap<>();
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(SecurityInstanceUtils.getSha512().digest(key.getBytes()), 0, 32, "AES"), new GCMParameterSpec(96, form.getNonce().getBytes()));
         String expected = form.getNonce() + " " + form.getTimestamp();
@@ -77,50 +67,38 @@ public class HomeController {
         boolean timeValid = Math.abs(form.getTimestamp() - jwtTokenService.getClock()) < 10000;
         boolean signValid = expected.equals(actual);
         if (!timeValid || !signValid || !nonceValid) {
-            result.put(STATUS, ERROR);
-            return ResponseEntity.status(401).body(result);
+            throw new UnauthorizedException();
         }
         String newJwt = jwtTokenService.refreshToken(jwt);
         if (newJwt == null) {
-            result.put(STATUS, ERROR);
-            return ResponseEntity.status(403).body(result);
+            throw new ForbiddenException();
         }
         userSessionService.refreshSession(sender.getName(), sid);
-        result.put(STATUS, OK);
-        result.put("jwt", newJwt);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(JwtResult.from(newJwt));
     }
 
     // should never fails so you cannot tells if a email is registered
     @PostMapping("code")
-    public ResponseEntity<Map<String, String>> code(@Valid @RequestBody SrpChallengeForm form) {
-        Map<String, String> result = new HashMap<>();
+    public ResponseEntity<MessageResult> code(@Valid @RequestBody SrpChallengeForm form) {
         final UserEntity ud = userService.findByEmail(form.getEmail());
 
         if (ud != null) {
             // WAI: Prevent spoofing whether one email is already registered
             logger.warn("attempt to request code for already registered email: {}", form.getEmail());
-            result.put(STATUS, OK);
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok().build();
         }
         try {
             String code = userSessionService.sendCode(form.getEmail());
             if (code != null) {
-                result.put(STATUS, OK);
-                result.put("mock", code); // TOD: remove it when email sms api available
-                return ResponseEntity.ok(result);
+                return ResponseEntity.ok(MessageResult.from("", code));
             } else {
                 logger.warn("too frequent code request for {}", form.getEmail());
-                result.put(STATUS, ERROR);
-                result.put("msg", ";too much request");
-                return ResponseEntity.status(429).header("Retry-After", "60").body(result);
+                return ResponseEntity.status(429).header("Retry-After", "60").body(MessageResult.from(";too much request"));
             }
         } catch (Exception e) {
             logger.warn("exception when requesting code for {}", form.getEmail());
             logger.warn("exception:", e);
-            result.put(STATUS, ERROR);
-            result.put("msg", ";email number not valid");
-            return ResponseEntity.badRequest().body(result);
+            return ResponseEntity.badRequest().body(MessageResult.from(";email number not valid"));
         }
     }
 }

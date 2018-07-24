@@ -3,10 +3,10 @@ package org.librazy.demo.dubbo.model;
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.io.Serializable;
-import java.util.Date;
 
 public class BlogEntry implements Serializable {
 
@@ -15,22 +15,17 @@ public class BlogEntry implements Serializable {
     @Positive
     private Long id;
 
-    @NotBlank
     private String title;
 
-    @NotBlank
     private String content;
 
-    @Positive
     private Long authorId;
 
-    @NotNull
     @Positive
-    private Long publish = new Date().getTime();
+    private Long publish;
 
-    @NotNull
     @Positive
-    private Long updated = new Date().getTime();
+    private Long updated;
 
     public static BlogEntry fromEntity(BlogEntryEntity entity) {
         BlogEntry blogEntry = new BlogEntry();

@@ -3,7 +3,7 @@ package org.librazy.demo.dubbo.web;
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.BlogEntry;
-import org.librazy.demo.dubbo.model.UserForm;
+import org.librazy.demo.dubbo.model.User;
 import org.librazy.demo.dubbo.service.BlogService;
 import org.librazy.demo.dubbo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,59 +31,54 @@ public class UserController {
         this.blogService = blogService;
     }
 
-    @RequestMapping(value = "/user/{userId:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT,
+    @RequestMapping(value = "/user/{user:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT,
             RequestMethod.POST})
-    @PreAuthorize("hasRole('USER') && (#userId.equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #userId))")
-    public ResponseEntity<Void> update(@PathVariable long userId, @RequestBody UserForm userForm) {
-        if ((userForm.getId() != null) && (userId != userForm.getId())) {
+    @PreAuthorize("hasRole('USER') && (#user.username.equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #user.username))")
+    public ResponseEntity<Void> update(@PathVariable UserEntity user, @RequestBody User userForm) {
+        if (userForm.getId() != null && user.getId() != userForm.getId() || userForm.getEmail() != null && !user.getEmail().equals(userForm.getEmail())
+        ) {
             return ResponseEntity.badRequest().build();
         }
-        userForm.setId(userId);
-        userService.update(userForm);
+        userService.update(user, userForm);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/user/{userId:\\d+}/")
-    public ResponseEntity<UserForm> get(@PathVariable long userId) {
-        UserEntity userEntity = userService.loadUserByUsername(String.valueOf(userId));
-        UserForm userForm = new UserForm(userEntity);
+    @GetMapping("/user/{user:\\d+}/")
+    public ResponseEntity<User> get(@PathVariable UserEntity user) {
+        User userForm = User.fromEntity(user);
         return ResponseEntity.ok(userForm);
     }
 
-    @GetMapping("/user/{userId:\\d+}/blog/")
-    public ResponseEntity<Set<BlogEntry>> getBlog(@PathVariable long userId) {
-        UserEntity userEntity = userService.loadUserByUsername(String.valueOf(userId));
-        Set<BlogEntryEntity> blogEntryEntities = userEntity.getBlogEntries();
+    @GetMapping("/user/{user:\\d+}/blog/")
+    public ResponseEntity<Set<BlogEntry>> getBlog(@PathVariable UserEntity user) {
+        Set<BlogEntryEntity> blogEntryEntities = user.getBlogEntries();
         Set<BlogEntry> blogEntries = blogEntryEntities.stream().map(BlogEntry::fromEntity).collect(Collectors.toSet());
         return ResponseEntity.ok(blogEntries);
     }
 
-    @GetMapping("/user/{userId:\\d+}/star/")
-    public ResponseEntity<Set<BlogEntry>> getStarEntity(@PathVariable long userId) {
-        UserEntity userEntity = userService.loadUserByUsername(String.valueOf(userId));
-        Set<BlogEntryEntity> blogEntryEntities = userEntity.getStarredEntries();
+    @GetMapping("/user/{user:\\d+}/star/")
+    public ResponseEntity<Set<BlogEntry>> getStarEntity(@PathVariable UserEntity user) {
+        Set<BlogEntryEntity> blogEntryEntities = user.getStarredEntries();
         Set<BlogEntry> blogEntries = blogEntryEntities.stream().map(BlogEntry::fromEntity).collect(Collectors.toSet());
         return ResponseEntity.ok(blogEntries);
     }
 
-    @GetMapping("/user/{userId:\\d+}/following/")
-    public ResponseEntity<Set<UserForm>> getFollowing(@PathVariable long userId) {
-        UserEntity userEntity = userService.loadUserByUsername(String.valueOf(userId));
-        Set<UserEntity> userEntities = userEntity.getFollowing();
-        Set<UserForm> userForms = new HashSet<>();
+    @GetMapping("/user/{user:\\d+}/following/")
+    public ResponseEntity<Set<User>> getFollowing(@PathVariable UserEntity user) {
+        Set<UserEntity> userEntities = user.getFollowing();
+        Set<User> userForms = new HashSet<>();
         for (UserEntity u : userEntities) {
-            userForms.add(new UserForm(u));
+            userForms.add(User.fromEntity(u));
         }
         return ResponseEntity.ok(userForms);
     }
 
-    @GetMapping("/user/{userId:\\d+}/follower/")
-    public ResponseEntity<Set<UserForm>> getFollower(@PathVariable long userId) {
-        UserEntity userEntity = userService.loadUserByUsername(String.valueOf(userId));
-        Set<UserEntity> userEntities = userEntity.getFollowers();
-        Set<UserForm> userForms = new HashSet<>();
+    @GetMapping("/user/{user:\\d+}/follower/")
+    public ResponseEntity<Set<User>> getFollower(@PathVariable UserEntity user) {
+        Set<UserEntity> userEntities = user.getFollowers();
+        Set<User> userForms = new HashSet<>();
         for (UserEntity u : userEntities) {
-            userForms.add(new UserForm(u));
+            userForms.add(User.fromEntity(u));
         }
         return ResponseEntity.ok(userForms);
     }
