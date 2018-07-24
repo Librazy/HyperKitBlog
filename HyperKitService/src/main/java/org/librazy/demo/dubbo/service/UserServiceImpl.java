@@ -68,7 +68,8 @@ public class UserServiceImpl implements UserService {
     }
 
 	@Override
-	public UserEntity update(UserForm userForm) {
+    @Transactional
+    public UserEntity update(UserForm userForm) {
 		UserEntity old = loadUserByUsername(String.valueOf(userForm.getId()));
         old.setAvatar(userForm.getAvatar());
         old.setBio(userForm.getBio());
@@ -77,7 +78,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void addStarredEntries(UserEntity user, BlogEntryEntity blog) {
+    @Transactional
+    public void addStarredEntries(UserEntity user, BlogEntryEntity blog) {
 		user.addStarredEntries(blog);
 		userRepository.save(user);
 		blogRepository.save(blog);
@@ -91,14 +93,16 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void addFollowing(UserEntity following, UserEntity followed) {
+    @Transactional
+    public void addFollowing(UserEntity following, UserEntity followed) {
 		following.addFollowing(followed);
 		userRepository.save(followed);
 		userRepository.save(following);
 	}
 
 	@Override
-	public void removeFollowing(UserEntity following, UserEntity followed) {
+    @Transactional
+    public void removeFollowing(UserEntity following, UserEntity followed) {
 		following.removeFollowing(followed);
 		userRepository.save(followed);
 		userRepository.save(following);

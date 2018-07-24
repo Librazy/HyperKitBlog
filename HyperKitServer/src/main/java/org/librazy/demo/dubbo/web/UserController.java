@@ -16,11 +16,13 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 public class UserController {
 
 	private static final String STATUS = "status";
+	private static final String ERROR = "error";
 
 	private final UserService userService;
 	private final BlogService blogService;
@@ -56,13 +58,7 @@ public class UserController {
 	public ResponseEntity<List<BlogEntry>> getBlog(@PathVariable long userId) {
 		UserEntity userEntity = userService.loadUserByUsername(String.valueOf(userId));
 		List<BlogEntryEntity> blogEntryEntities = userEntity.getBlogEntries();
-		List<BlogEntry> blogEntries = new ArrayList<>();
-		for (BlogEntryEntity b : blogEntryEntities) {
-			BlogEntry blogEntry = new BlogEntry();
-			blogEntry.setContent(b.getContent());
-			blogEntry.setTitle(b.getTitle());
-			blogEntries.add(blogEntry);
-		}
+		List<BlogEntry> blogEntries = blogEntryEntities.stream().map(BlogEntry::fromEntity).collect(Collectors.toList());
 		return ResponseEntity.ok(blogEntries);
 	}
 	
@@ -70,13 +66,7 @@ public class UserController {
 	public ResponseEntity<List<BlogEntry>> getStarEntity(@PathVariable long userId) {
 		UserEntity userEntity = userService.loadUserByUsername(String.valueOf(userId));
 		List<BlogEntryEntity> blogEntryEntities = userEntity.getStarredEntries();
-		List<BlogEntry> blogEntries = new ArrayList<>();
-		for (BlogEntryEntity b : blogEntryEntities) {
-			BlogEntry blogEntry = new BlogEntry();
-			blogEntry.setContent(b.getContent());
-			blogEntry.setTitle(b.getTitle());
-			blogEntries.add(blogEntry);
-		}
+		List<BlogEntry> blogEntries = blogEntryEntities.stream().map(BlogEntry::fromEntity).collect(Collectors.toList());
 		return ResponseEntity.ok(blogEntries);
 	}
 
@@ -107,8 +97,8 @@ public class UserController {
 	public ResponseEntity<Map<String, String>> addStarEntity(@PathVariable long userId, @PathVariable long entryId) {
 		Map<String, String> result = new HashMap<>();
 		BlogEntryEntity blogEntryEntity=blogService.get(entryId);
-		if ((blogEntryEntity.getAuthor() != null) && (userId == blogEntryEntity.getAuthor().getId())) {
-			result.put(STATUS, "ERROR");
+		if (userId == blogEntryEntity.getAuthor().getId()) {
+			result.put(STATUS, ERROR);
 			return ResponseEntity.badRequest().body(result);
 		}
 		UserEntity userEntity=userService.loadUserByUsername(String.valueOf(userId));
@@ -131,7 +121,7 @@ public class UserController {
 	public ResponseEntity<Map<String, String>> addFollowing(@PathVariable long userId, @PathVariable long followerId) {
 		Map<String, String> result = new HashMap<>();
 		if (userId==followerId) {
-			result.put(STATUS, "ERROR");
+			result.put(STATUS, ERROR);
 			return ResponseEntity.badRequest().body(result);
 		}
 		UserEntity followed=userService.loadUserByUsername(String.valueOf(followerId));
