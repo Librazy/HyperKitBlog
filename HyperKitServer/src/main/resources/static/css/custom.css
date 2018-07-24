@@ -803,7 +803,26 @@ figure {
 	}
 }
 
-#divuserblogfollow{
+#user-blog-follow{
     display: flex;
 }
 
+.right-col-topic{
+	font-size: 30px;
+}
+
+.right-col-box{
+	font-size: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
+}
+.num-box{
+	margin-left: 20px;
+	margin-right: 20px;
+}
+.blog-list{
+	font-size: 20px;
+}
+.more{
+	font-size: 10px;
+}
