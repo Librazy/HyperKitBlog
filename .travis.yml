@@ -5,6 +5,7 @@ install:
 - sudo ./install_fossa.sh
 - wget ${ES_DOWNLOAD_URL}
 - tar -xzf elasticsearch-${ES_VERSION}.tar.gz
+- sudo ./elasticsearch-${ES_VERSION}/bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v${ES_VERSION}/elasticsearch-analysis-ik-${ES_VERSION}.zip
 - ./elasticsearch-${ES_VERSION}/bin/elasticsearch &
 before_script:
 - sed -i "s/compile\sproject/\/\/compile\ project/g" `grep "compile\sproject" -rl .`
@@ -12,7 +13,6 @@ before_script:
 - sed -i "s/\/\/compile\sproject/compile\ project/g" `grep "\/\/compile\sproject" -rl .`
 script:
 - wget -q --waitretry=2 --retry-connrefused -T 10 -O - http://127.0.0.1:9200
-- sudo ./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v${ES_VERSION}/elasticsearch-analysis-ik-${ES_VERSION}.zip
 - wget -q --waitretry=2 --retry-connrefused -T 10 -O - http://127.0.0.1:9200
 - ./gradlew clean build jacocoFullReport
 - ./gradlew jacocoMerge sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN

@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+        if (System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
         maven { url 'https://repo.spring.io/libs-milestone' }
     }
 
@@ -26,7 +26,7 @@ group 'org.librazy.demo.dubbo'
 version '1.0-SNAPSHOT'
 
 repositories {
-    maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+    if (System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
     maven {
         url 'https://repo.spring.io/libs-milestone'
     }
