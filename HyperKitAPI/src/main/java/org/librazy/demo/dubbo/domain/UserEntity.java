@@ -168,6 +168,26 @@ public class UserEntity implements UserDetails, Serializable {
         starred.getStargazers().remove(this);
     }
 
+    public void addFollowers(UserEntity user){
+    	this.followers.add(user);
+    	user.getFollowing().add(this);
+    }
+    
+    public void removeFollowers(UserEntity user){
+    	this.followers.remove(user);
+    	user.getFollowing().remove(this);
+    }
+    
+    public void addFollowing(UserEntity user){
+    	this.following.add(user);
+    	user.getFollowers().add(this);
+    }
+    
+    public void removeFollowing(UserEntity user){
+    	this.following.remove(user);
+    	user.getFollowers().remove(this);
+    }
+    
     public List<UserEntity> getFollowing() {
         return following;
     }
