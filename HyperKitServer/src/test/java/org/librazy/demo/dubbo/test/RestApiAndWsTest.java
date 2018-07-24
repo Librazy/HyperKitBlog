@@ -118,7 +118,7 @@ class RestApiAndWsTest {
                                .withCleanInstallationDirectoryOnStop(true)
                                .withSetting(PopularProperties.HTTP_PORT, 9201)
                                .withEsJavaOpts("-Xms128m -Xmx512m")
-                               .withPlugin("https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.3.0/elasticsearch-analysis-ik-6.3.0.zip")
+                               .withPlugin("https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.3.1/elasticsearch-analysis-ik-6.3.1.zip")
                                .withIndex("blogs", IndexSettings
                                                            .builder()
                                                            .withType("entry",
