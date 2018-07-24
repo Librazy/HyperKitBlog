@@ -1,10 +1,13 @@
 package org.librazy.demo.dubbo.service;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
+import org.librazy.demo.dubbo.domain.repo.BlogRepository;
 import org.librazy.demo.dubbo.domain.repo.UserRepository;
 import org.librazy.demo.dubbo.model.SrpSignupForm;
+import org.librazy.demo.dubbo.model.UserForm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +24,12 @@ public class UserServiceImpl implements UserService {
     private static Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
+    private final BlogRepository blogRepository;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, BlogRepository blogRepository) {
         this.userRepository = userRepository;
+        this.blogRepository = blogRepository;
     }
 
     @Override
@@ -60,4 +65,52 @@ public class UserServiceImpl implements UserService {
     public UserEntity findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
+
+    @Override
+    @Transactional
+    public UserEntity update(UserForm userForm) {
+        UserEntity old = loadUserByUsername(String.valueOf(userForm.getId()));
+        old.setAvatar(userForm.getAvatar());
+        old.setBio(userForm.getBio());
+        old.setNick(userForm.getNick());
+        return userRepository.saveAndFlush(old);
+    }
+
+    @Override
+    @Transactional
+    public boolean addStarredEntries(UserEntity user, BlogEntryEntity blog) {
+        boolean addStarredEntries = user.addStarredEntries(blog);
+        userRepository.saveAndFlush(user);
+        blogRepository.saveAndFlush(blog);
+        return addStarredEntries;
+    }
+
+    @Override
+    public boolean removeStarredEntries(UserEntity user, BlogEntryEntity blog) {
+        boolean removeStarredEntries = user.removeStarredEntry(blog);
+        userRepository.saveAndFlush(user);
+        blogRepository.saveAndFlush(blog);
+        return removeStarredEntries;
+    }
+
+    @Override
+    @Transactional
+    public boolean addFollowing(UserEntity following, UserEntity followed) {
+        boolean addFollowing = following.addFollowing(followed);
+        userRepository.save(followed);
+        userRepository.save(following);
+        userRepository.flush();
+        return addFollowing;
+    }
+
+    @Override
+    @Transactional
+    public boolean removeFollowing(UserEntity following, UserEntity followed) {
+        boolean removeFollowing = following.removeFollowing(followed);
+        userRepository.save(followed);
+        userRepository.save(following);
+        userRepository.flush();
+        return removeFollowing;
+    }
+
 }

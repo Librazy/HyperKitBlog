@@ -10,7 +10,7 @@ import java.security.SecureRandom;
  */
 public class SecurityInstanceUtils {
 
-    private SecurityInstanceUtils(){
+    private SecurityInstanceUtils() {
         throw new UnsupportedOperationException();
     }
 
