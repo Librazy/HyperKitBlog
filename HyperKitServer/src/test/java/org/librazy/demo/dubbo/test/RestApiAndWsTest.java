@@ -48,6 +48,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.IndexSettings;
+import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -107,13 +108,15 @@ class RestApiAndWsTest {
     private EntityManager entityManager;
 
     @BeforeAll
-    static void start() throws SQLException {
+    static void start() throws SQLException, IOException, InterruptedException {
         h2Server = Server.createWebServer("-web",
                 "-webAllowOthers", "-webPort", String.valueOf(SocketUtils.findAvailableTcpPort()));
         h2Server.start();
         embeddedElastic =
                 EmbeddedElastic.builder()
                                .withElasticVersion("6.3.1")
+                               .withCleanInstallationDirectoryOnStop(true)
+                               .withSetting(PopularProperties.HTTP_PORT, 9201)
                                .withEsJavaOpts("-Xms128m -Xmx512m")
                                .withPlugin("https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.3.0/elasticsearch-analysis-ik-6.3.0.zip")
                                .withIndex("blogs", IndexSettings
@@ -128,11 +131,13 @@ class RestApiAndWsTest {
                                                                            "        }")
                                                            .build())
                                .build();
+        embeddedElastic.start();
     }
 
     @AfterAll
     static void stop() {
         h2Server.stop();
+        embeddedElastic.stop();
     }
 
     @BeforeEach
@@ -627,7 +632,7 @@ class RestApiAndWsTest {
 
     @Test
     @Rollback
-    void blogApiCrudTest() throws InterruptedException {
+    void blogApiCrudTest() {
         UserEntity testUser = createTestUser();
         UserEntity testUser2 = createTestUser2();
         userSessionService.newSession(testUser.getUsername(), "session", "ua", "key");
