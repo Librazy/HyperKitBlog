@@ -53,3 +53,5 @@ dependencies {
 compileJava {
     options.compilerArgs += ["-Xlint:all"]
 }
+
+tasks.withType(JavaCompile) { options.encoding = "UTF-8" }

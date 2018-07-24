@@ -35,6 +35,7 @@ repositories {
 dependencies {
     compile project(":HyperKitAPI")
     compile project(":HyperKitService")
+    compile 'org.apache.tomcat.embed:tomcat-embed-core:9.0.10'
 }
 
 compileJava {
@@ -49,3 +50,5 @@ test {
     useJUnitPlatform()
     environment 'spring.profiles.active', 'test-default'
 }
+
+tasks.withType(JavaCompile) { options.encoding = "UTF-8" }

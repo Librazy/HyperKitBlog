@@ -11,9 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Base64;
 
+
 /**
- * Encrypts a database column with a secret key. The key should only be know to
- * the webserver.
+ * 数据库列加密。
  */
 @Converter
 public class JpaCryptoConverter implements AttributeConverter<String, String> {
@@ -24,18 +24,38 @@ public class JpaCryptoConverter implements AttributeConverter<String, String> {
 
     private static Logger logger = LoggerFactory.getLogger(JpaCryptoConverter.class);
 
+    /**
+     * 获取加密算法
+     *
+     * @return 算法
+     */
     public static String getAlgorithm() {
         return algorithm;
     }
 
+    /**
+     * 设置算法
+     *
+     * @param algorithm 算法
+     */
     public static void setAlgorithm(String algorithm) {
         JpaCryptoConverter.algorithm = algorithm;
     }
 
+    /**
+     * 获取加密密钥
+     *
+     * @return the byte [ ]
+     */
     public static byte[] getKey() {
         return key;
     }
 
+    /**
+     * 设置密钥
+     *
+     * @param key the key
+     */
     public static void setKey(byte[] key) {
         JpaCryptoConverter.key = key;
     }

@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
 
+/**
+ * JPA 数据库加密参数
+ */
 @Configuration
 public class JpaCryptoConfig {
 
