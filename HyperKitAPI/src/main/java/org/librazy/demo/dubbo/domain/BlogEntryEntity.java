@@ -34,7 +34,7 @@ public class BlogEntryEntity implements Serializable {
     @Column(columnDefinition = "MEDIUMTEXT")
     private String content;
     
-    @Column(columnDefinition = "BIGINT")
+    @Column
     private String simhash;
 
     @ManyToOne

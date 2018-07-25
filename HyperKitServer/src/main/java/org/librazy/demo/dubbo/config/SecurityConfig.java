@@ -46,9 +46,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .headers().frameOptions().sameOrigin().and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
-                .antMatchers("/", "/favicon.ico", "/resources/**", "/signup",
+                .antMatchers("/", "/favicon.ico", "/resources/**", "/static/**", "/signup",
                         "/register", "/challenge", "/authenticate", "/h2-console/**",
-                        "/code", "/stomp", "/swagger-**" , "/swagger-resources/**",
+                        "/code", "/stomp", "/swagger-**", "/swagger-resources/**",
                         "/webjars/**", "/v2/**", "/blog/**")
                 .permitAll()
                 .anyRequest().authenticated().and()

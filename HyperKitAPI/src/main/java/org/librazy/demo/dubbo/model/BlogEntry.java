@@ -17,6 +17,8 @@ public class BlogEntry implements Serializable {
 
     private String content;
 
+    private String simhash;
+
     private Long authorId;
 
     @Positive
@@ -84,5 +86,13 @@ public class BlogEntry implements Serializable {
 
     public void setUpdated(@NotNull Long updated) {
         this.updated = updated;
+    }
+
+    public String getSimhash() {
+        return simhash;
+    }
+
+    public void setSimhash(String simhash) {
+        this.simhash = simhash;
     }
 }
