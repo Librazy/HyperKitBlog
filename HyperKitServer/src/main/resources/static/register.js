@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -98,7 +98,7 @@ eval("\n\nfunction _asyncToGenerator(fn) { return function () { var gen = fn.app
 
 /***/ }),
 
-/***/ 1:
+/***/ 2:
 /*!************************!*\
   !*** multi ./register ***!
   \************************/
