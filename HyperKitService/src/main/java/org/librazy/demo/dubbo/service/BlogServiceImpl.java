@@ -55,7 +55,7 @@ public class BlogServiceImpl implements BlogService {
             old.setTitle(entry.getTitle());
         }
         BlogEntryEntity entity = blogRepository.saveAndFlush(old);
-        elasticSearchService.put(BlogEntry.fromEntity(entity));
+        elasticSearchService.update(BlogEntry.fromEntity(entity));
         return entity;
     }
 

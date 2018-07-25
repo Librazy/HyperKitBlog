@@ -6,7 +6,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.8'
+        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.8.1'
         classpath 'org.asciidoctor:asciidoctorj-pdf:1.5.0-alpha.16'
         classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.20.0'
@@ -71,8 +71,8 @@ dependencies {
     compile 'io.springfox:springfox-swagger-ui:2.9.2'
     compile "io.springfox:springfox-swagger2:2.9.2"
     compile "org.bitbucket.simon_massey:thinbus-srp6a-js:$thinbusVersion"
-    compile 'org.elasticsearch:elasticsearch:6.3.1'
-    compile 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.3.1'
+    compile 'org.elasticsearch:elasticsearch:6.3.2'
+    compile 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.3.2'
     compile 'org.jetbrains:annotations:16.0.2'
     compile "org.springframework.boot:spring-boot-devtools:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
