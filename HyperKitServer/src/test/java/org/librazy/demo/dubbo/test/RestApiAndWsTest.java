@@ -33,6 +33,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -54,10 +55,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.sql.SQLException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -71,6 +69,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class RestApiAndWsTest {
 
     private static Server h2Server;
+
     @LocalServerPort
     private int port;
     @Autowired
@@ -106,14 +105,14 @@ class RestApiAndWsTest {
     private TransactionTemplate transactionTemplate;
 
     @BeforeAll
-    static void startH2Console() throws SQLException {
+    static void start() throws SQLException {
         h2Server = Server.createWebServer("-web",
                 "-webAllowOthers", "-webPort", String.valueOf(SocketUtils.findAvailableTcpPort()));
         h2Server.start();
     }
 
     @AfterAll
-    static void stopH2Console() {
+    static void stop() {
         h2Server.stop();
     }
 
@@ -387,7 +386,7 @@ class RestApiAndWsTest {
                 messageReceived[0] = true;
             }
         });
-        stompSession.send("/app/broadcast", new ChatMessage().setMid(1L).setContent("Content"));
+        stompSession.send("/app/broadcast", new ChatMessage(1L, ChatMessage.MessageType.TEXT).setContent("Content"));
         TimeUnit.SECONDS.sleep(1);
         assertTrue(messageReceived[0]);
 
@@ -626,31 +625,40 @@ class RestApiAndWsTest {
 
         BlogEntry blogEntry = new BlogEntry();
         blogEntry.setTitle("Title");
-        blogEntry.setContent("Content");
+        blogEntry.setContent("Content keyword 1");
         blogEntry.setAuthorId(testUser.getId());
         ResponseEntity<Map> createEntry = testRestTemplate.exchange(RequestEntity.post(URI.create("/blog/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Map.class);
         assertEquals(201, createEntry.getStatusCodeValue());
         URI location = createEntry.getHeaders().getLocation();
-        long id = Long.parseLong((String) createEntry.getBody().get("id"));
+        Long id = Long.parseLong((String) Objects.requireNonNull(createEntry.getBody()).get("id"));
         assertNotNull(location);
-        assertTrue(location.toString().matches("\\/blog\\/\\d+\\/"));
+        assertTrue(location.toString().matches("/blog/\\d+/"));
 
         ResponseEntity<Void> getEntry = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
         assertEquals(200, getEntry.getStatusCodeValue());
         ResponseEntity<Void> getEntry2 = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
         assertEquals(200, getEntry2.getStatusCodeValue());
 
-        blogEntry.setContent("Content2");
+        blogEntry.setContent("Content keyword and 2");
         ResponseEntity<Void> updateEntry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
         assertEquals(200, updateEntry.getStatusCodeValue());
 
         blogEntry.setId(id);
-        blogEntry.setContent("Content3");
+        blogEntry.setContent("Content keyword and 3");
         ResponseEntity<Void> update2Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
         assertEquals(200, update2Entry.getStatusCodeValue());
 
+        ResponseEntity<List<BlogEntrySearchResult>> search = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/search?q=keyword")).build(), new ParameterizedTypeReference<List<BlogEntrySearchResult>>() {
+        });
+        assertEquals(200, search.getStatusCodeValue());
+        List<BlogEntrySearchResult> searchResults = search.getBody();
+        assertNotNull(searchResults);
+        assertEquals(1, searchResults.size());
+        assertEquals(id, searchResults.get(0).getId());
+        assertTrue(searchResults.get(0).getContent().contains("<em>"));
+
         blogEntry.setId(id + 1);
-        blogEntry.setContent("Content4");
+        blogEntry.setContent("Content keyword and 4");
         ResponseEntity<Void> update3Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
         assertEquals(400, update3Entry.getStatusCodeValue());
 

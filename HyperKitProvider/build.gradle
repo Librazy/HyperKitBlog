@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+        if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
         maven { url 'https://repo.spring.io/libs-milestone' }
     }
 
@@ -26,7 +26,7 @@ group 'org.librazy.demo.dubbo'
 version '1.0-SNAPSHOT'
 
 repositories {
-    maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+    if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
     maven {
         url 'https://repo.spring.io/libs-milestone'
     }
@@ -35,6 +35,7 @@ repositories {
 dependencies {
     compile project(":HyperKitAPI")
     compile project(":HyperKitService")
+    compile 'org.apache.tomcat.embed:tomcat-embed-core:9.0.10'
 }
 
 compileJava {
@@ -49,3 +50,5 @@ test {
     useJUnitPlatform()
     environment 'spring.profiles.active', 'test-default'
 }
+
+tasks.withType(JavaCompile) { options.encoding = "UTF-8" }
