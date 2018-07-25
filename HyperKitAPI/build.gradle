@@ -32,8 +32,10 @@ dependencies {
     compile 'com.github.kstyrc:embedded-redis:0.6'
     compile 'commons-codec:commons-codec:1.11'
     compile 'io.jsonwebtoken:jjwt:0.9.1'
-    compile 'javax.xml.bind:jaxb-api:2.3.0'
     compile 'javax.validation:validation-api:2.0.1.Final'
+    compile 'javax.xml.bind:jaxb-api:2.3.0'
+    compile 'org.elasticsearch:elasticsearch:6.3.1'
+    compile 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.3.1'
     compile 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2'
     compile "org.springframework:spring-beans:$springVersion"
     compile "org.springframework:spring-context:$springVersion"
@@ -43,9 +45,8 @@ dependencies {
     compile "org.springframework.security:spring-security-core:$springSecurityVersion"
 
     runtime "org.springframework:spring-web:$springVersion"
-
+    
     testCompile "org.junit.jupiter:junit-jupiter-api:$junitVersion"
-
     testRuntime "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
     testRuntime "org.junit.vintage:junit-vintage-engine:$junitVersion"
 }

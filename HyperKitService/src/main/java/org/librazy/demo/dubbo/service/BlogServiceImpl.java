@@ -35,7 +35,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public BlogEntryEntity create(UserEntity author, BlogEntry blogForm) {
+    public BlogEntryEntity create(UserEntity author, BlogEntry entry) throws IOException {
         BlogEntryEntity blogEntryEntity = new BlogEntryEntity(author);
         blogEntryEntity.setContent(entry.getContent());
         blogEntryEntity.setTitle(entry.getTitle());
@@ -47,7 +47,7 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public BlogEntryEntity update(BlogEntryEntity old, BlogEntry entry) {
+    public BlogEntryEntity update(BlogEntryEntity old, BlogEntry entry) throws IOException {
         if (entry.getContent() != null) {
             old.setContent(entry.getContent());
         }
@@ -55,6 +55,7 @@ public class BlogServiceImpl implements BlogService {
             old.setTitle(entry.getTitle());
         }
         BlogEntryEntity entity = blogRepository.saveAndFlush(old);
+        elasticSearchService.put(BlogEntry.fromEntity(entity));
         return entity;
     }
 

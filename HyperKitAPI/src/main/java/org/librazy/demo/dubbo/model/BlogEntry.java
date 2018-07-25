@@ -2,8 +2,6 @@ package org.librazy.demo.dubbo.model;
 
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.io.Serializable;
