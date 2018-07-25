@@ -10,7 +10,7 @@ const autoPlugin = new AutoWebPlugin(
         template: (pageName) => __dirname + "/" + pageName + "/" + pageName + "Index.html",
 
 
-        ignorePages: ['node_modules', 'blog_edit', 'index', 'person', 'person_edit', 'single'],
+        ignorePages: ['node_modules', 'blog_edit', 'index', 'person_edit', 'single'],
 
         // whether output a pagemap.json file which contain all pages has been resolved with AutoWebPlugin in this way:
         // {"page name": "page url",}

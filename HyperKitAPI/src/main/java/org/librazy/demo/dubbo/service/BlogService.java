@@ -4,6 +4,8 @@ import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.BlogEntry;
 import org.librazy.demo.dubbo.model.BlogEntrySearchResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
@@ -53,4 +55,22 @@ public interface BlogService {
     @Transactional
     BlogEntryEntity update(BlogEntryEntity old, BlogEntry entry) throws IOException;
 
+    /**
+     * 用户博文分页
+     *
+     * @param user  用户
+     * @param page  页数
+     * @return 博文实体
+     */
+    @Transactional
+    Page<BlogEntryEntity> getUserBlogPaged(UserEntity user, Pageable page);
+
+    /**
+     * 博文分页
+     *
+     * @param page  页数
+     * @return 博文实体
+     */
+    @Transactional
+    Page<BlogEntryEntity> getBlogPaged(Pageable page);
 }

@@ -6,6 +6,8 @@ import org.librazy.demo.dubbo.domain.repo.BlogRepository;
 import org.librazy.demo.dubbo.model.BlogEntry;
 import org.librazy.demo.dubbo.model.BlogEntrySearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +59,16 @@ public class BlogServiceImpl implements BlogService {
         BlogEntryEntity entity = blogRepository.saveAndFlush(old);
         elasticSearchService.update(BlogEntry.fromEntity(entity));
         return entity;
+    }
+
+    @Override
+    public Page<BlogEntryEntity> getUserBlogPaged(UserEntity user, Pageable page) {
+        return blogRepository.findAllByAuthor(user, page);
+    }
+
+    @Override
+    public Page<BlogEntryEntity> getBlogPaged(Pageable page) {
+        return blogRepository.findAll(page);
     }
 
     @Override
