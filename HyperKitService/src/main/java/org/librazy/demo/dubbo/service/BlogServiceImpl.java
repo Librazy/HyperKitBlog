@@ -4,41 +4,62 @@ import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.domain.repo.BlogRepository;
 import org.librazy.demo.dubbo.model.BlogEntry;
+import org.librazy.demo.dubbo.model.BlogEntrySearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.List;
 
 @Service
 public class BlogServiceImpl implements BlogService {
 
     private final BlogRepository blogRepository;
 
+    private final ElasticSearchService elasticSearchService;
+
     @Autowired
-    public BlogServiceImpl(BlogRepository blogRepository) {
+    public BlogServiceImpl(BlogRepository blogRepository, ElasticSearchService elasticSearchService) {
         this.blogRepository = blogRepository;
+        this.elasticSearchService = elasticSearchService;
     }
 
     @Override
-    public void delete(BlogEntryEntity entry) {
+    public void delete(BlogEntryEntity entry) throws IOException {
         blogRepository.delete(entry);
+        elasticSearchService.delete(entry.getId());
     }
 
     @Override
     @Transactional
-    public BlogEntryEntity create(UserEntity author, BlogEntry blogForm) {
+    public BlogEntryEntity create(UserEntity author, BlogEntry entry) throws IOException {
         BlogEntryEntity blogEntryEntity = new BlogEntryEntity(author);
-        blogEntryEntity.setContent(blogForm.getContent());
-        blogEntryEntity.setTitle(blogForm.getTitle());
-        return blogRepository.save(blogEntryEntity);
+        blogEntryEntity.setContent(entry.getContent());
+        blogEntryEntity.setTitle(entry.getTitle());
+        blogEntryEntity.setPublish(Timestamp.from(Instant.now()));
+        BlogEntryEntity entity = blogRepository.save(blogEntryEntity);
+        elasticSearchService.put(BlogEntry.fromEntity(entity));
+        return entity;
     }
 
     @Override
     @Transactional
-    public BlogEntryEntity update(BlogEntry blogForm) {
-        BlogEntryEntity old = get(blogForm.getId());
-        old.setContent(blogForm.getContent());
-        old.setTitle(blogForm.getTitle());
-        return blogRepository.save(old);
+    public BlogEntryEntity update(BlogEntry entry) throws IOException {
+        BlogEntryEntity old = get(entry.getId());
+        old.setContent(entry.getContent());
+
+        old.setTitle(entry.getTitle());
+        BlogEntryEntity entity = blogRepository.save(old);
+        elasticSearchService.put(BlogEntry.fromEntity(entity));
+        return entity;
+    }
+
+    @Override
+    public List<BlogEntrySearchResult> search(String keyword) throws IOException {
+        return elasticSearchService.search(keyword);
     }
 
     @Override

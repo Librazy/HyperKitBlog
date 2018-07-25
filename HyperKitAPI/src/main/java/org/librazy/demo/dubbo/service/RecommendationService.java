@@ -21,5 +21,4 @@ public interface RecommendationService {
 	//int hammingDistance(BigInteger simhash1,BigInteger simhash2);
 	
 	List<RecommendBlogEntry> recommendation(long id);
-
 }

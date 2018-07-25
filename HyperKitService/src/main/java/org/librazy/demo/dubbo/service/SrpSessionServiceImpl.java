@@ -13,6 +13,8 @@ import org.librazy.demo.dubbo.model.SrpSignupForm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -23,6 +25,7 @@ import static org.librazy.demo.dubbo.config.RedisUtils.OK;
 @SuppressWarnings("unchecked")
 @Service
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SrpSessionServiceImpl implements SrpSessionService {
 
     private static Logger logger = LoggerFactory.getLogger(SrpSessionServiceImpl.class);
@@ -125,7 +128,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
     }
 
     @Override
-    public void clear(){
+    public void clear() {
         session = null;
     }
 }
