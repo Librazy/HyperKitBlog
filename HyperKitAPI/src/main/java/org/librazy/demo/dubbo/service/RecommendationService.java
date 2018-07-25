@@ -12,9 +12,9 @@ public interface RecommendationService {
 	
 	BigInteger hash(String source);
 	
-	BigInteger simhash(List<String> ik);
+	String simhash(List<String> ik);
 	
-	BigInteger getSimhash(long id);
+	//BigInteger getSimhash(long id);
 	
 	//Map<BigInteger,BigInteger> getAllSimhash();//BigInteger1是博客id，BigInteger2是simhash值。
 	

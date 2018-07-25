@@ -5,36 +5,69 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse.AnalyzeToken;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.text.Text;
+import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.librazy.demo.dubbo.domain.repo.BlogRepository;
+import org.librazy.demo.dubbo.model.BlogEntrySearchResult;
 import org.librazy.demo.dubbo.model.RecommendBlogEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.dubbo.config.annotation.Service;
+
+import net.minidev.json.JSONArray;
 
 @Service
 @Component
 public class RecommendationServiceImpl implements RecommendationService {
 
 	//private ElasticSearchServiceImpl elasticsearchService; 
+	private static Logger logger = LoggerFactory.getLogger(SrpSessionServiceImpl.class);
+
+    @Value("${es.blog.index}")
+    private String index;
+
+    @Value("${es.blog.type}")
+    private String type;
+    
+    private static final String TITLE = "title";
+
+
+	
+	
 	private BlogRepository blogRepository;
 	//private RestHighLevelClient client;
-	private RestHighLevelClient client;
+	private TransportClient  client;
 
     @Autowired
-    public RecommendationServiceImpl(RestHighLevelClient client) {
+    public RecommendationServiceImpl(TransportClient  client,BlogRepository blogRepository) {
         this.client = client;
+        this.blogRepository=blogRepository;
     }
 	
 	
@@ -62,7 +95,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 
 	@Override
-	public BigInteger simhash(List<String> ik) {
+	public String simhash(List<String> ik) {
 		int[] v = new int[64];
 		for(String word:ik)
 		{
@@ -80,20 +113,20 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 		}
 		
-		BigInteger simhashfinger = new BigInteger("0");
+		StringBuffer simhashfinger = new StringBuffer();
 		for (int i = 0; i < 64; i++) {
-			if (v[i] >= 0) {
-				simhashfinger = simhashfinger.add(new BigInteger("1").shiftLeft(i));
+			if (v[i] > 0) {
+				v[i]=1;
 			}
+			else
+			{
+				v[i]=0;
+			}
+			simhashfinger = simhashfinger.append(v[i]);
 		}
-		return simhashfinger;
+		return simhashfinger.toString();
 	}
 
-	@Override
-	public BigInteger getSimhash(long id) {
-		// TODO Auto-generated method stub
-		return this.blogRepository.getOne(id).getSimhash();
-	}
 
 
 	@Override
@@ -101,14 +134,21 @@ public class RecommendationServiceImpl implements RecommendationService {
 		
 		List<RecommendBlogEntry> results =new LinkedList<RecommendBlogEntry>();
 		
-		BigInteger thisSimhash=this.getSimhash(id);
+		String thisSimhash=this.blogRepository.getOne(id).getSimhash();
 		
+		SearchRequestBuilder responsebuilder = client.prepareSearch(this.index).setTypes(this.type);
+		SearchResponse searchResponse=responsebuilder.setQuery(
+				QueryBuilders.fuzzyQuery("simhash", thisSimhash).fuzziness(Fuzziness.fromEdits(2)).prefixLength(2).maxExpansions(50)
+				) .get();
 		
-		
-		
-		
-		
-		
+		for (SearchHit hit : searchResponse.getHits()) {
+            long id1 = Long.parseLong(hit.getId());
+            HighlightField titleHighlight = hit.getHighlightFields().get(TITLE);
+            String title = titleHighlight != null ? titleHighlight.getFragments()[0].string() : (String) hit.getSourceAsMap().get(TITLE);
+            //String content = Arrays.stream(hit.getHighlightFields().get(CONTENT).getFragments()).map(Text::string).collect(Collectors.joining("\", \"", "\"", "\""));
+            RecommendBlogEntry result = new RecommendBlogEntry(id1, title);
+            results.add(result);
+        }
 		return results;
 	}
 
@@ -116,10 +156,27 @@ public class RecommendationServiceImpl implements RecommendationService {
 	@Override
 	public List<String> ikAnalyze(String content ) {
 		
+		//TransportClient client = EsUtils.getSingleClient();
 		
+		List<String> results=new ArrayList<String>();
 		
+		AnalyzeRequest analyzeRequest = new AnalyzeRequest(this.index)
+                .text(content)
+                .analyzer("ik_max_word");
 		
-		return null;
+		List<AnalyzeResponse.AnalyzeToken> tokens = this.client.admin().indices()
+                .analyze(analyzeRequest)
+                .actionGet()
+                .getTokens();
+		
+		for (AnalyzeResponse.AnalyzeToken token : tokens) {
+			results.add(token.getTerm());
+        }
+		return results;
 	}
-
 }
+
+
+
+
+

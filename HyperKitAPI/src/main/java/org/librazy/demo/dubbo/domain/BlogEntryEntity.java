@@ -35,7 +35,7 @@ public class BlogEntryEntity implements Serializable {
     private String content;
     
     @Column(columnDefinition = "BIGINT")
-    private BigInteger simhash;
+    private String simhash;
 
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -80,12 +80,12 @@ public class BlogEntryEntity implements Serializable {
         return content;
     }
 
-    public void setSimhash(BigInteger simhash) {
+    public void setSimhash(String simhash) {
         this.simhash = simhash;
     }
     
     
-    public BigInteger getSimhash() {
+    public String getSimhash() {
         return simhash;
     }
 
