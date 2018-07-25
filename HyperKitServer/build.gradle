@@ -12,7 +12,7 @@ buildscript {
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.20.0'
         classpath 'io.github.swagger2markup:swagger2markup-spring-restdocs-ext:1.3.3'
         classpath 'io.github.swagger2markup:swagger2markup-gradle-plugin:1.3.3'
-        classpath 'org.jruby:jruby-complete:9.1.13.0'
+        classpath 'org.jruby:jruby-complete:9.2.0.0'
     }
 }
 
