@@ -51,7 +51,7 @@ subprojects {
     sonarqube {
         properties {
             property "sonar.coverage.exclusions", "**/domain/*.java" // Generated Code
-            property "sonar.exclusions", "**/*Application.java" // Not a part of application
+            property "sonar.exclusions", "**/*Application.java,**/domain/*.java" // Not a part of application
             property "sonar.jacoco.reportPaths", allTestCoverageFile
         }
     }
