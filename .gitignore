@@ -69,7 +69,7 @@ fabric.properties
 hs_err_pid*
 ### Gradle template
 .gradle
-/build/
+**/build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -81,7 +81,15 @@ gradle-app.setting
 .gradletasknamecache
 
 .idea/
+**/bin/
 !/gradle/wrapper/gradle-wrapper.properties
 /src/main/resources/webjars/
 /classes/
-ccJacoco/
+.project
+
+**/*.prefs
+
+*.prefs.xml
+.classpath
+
+**/.settings
