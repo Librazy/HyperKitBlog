@@ -1,6 +1,7 @@
 buildscript {
     repositories {
-        maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+        if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
+        maven { url 'https://repo.spring.io/libs-milestone' }
     }
 
     dependencies {
@@ -21,7 +22,7 @@ group 'org.librazy.demo.dubbo'
 version '1.0-SNAPSHOT'
 
 repositories {
-    maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+    if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
     maven {
         url 'https://repo.spring.io/libs-milestone'
     }
@@ -45,7 +46,7 @@ dependencies {
     compile "org.springframework.security:spring-security-core:$springSecurityVersion"
 
     runtime "org.springframework:spring-web:$springVersion"
-    
+
     testCompile "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testRuntime "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
     testRuntime "org.junit.vintage:junit-vintage-engine:$junitVersion"
