@@ -28,7 +28,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -79,21 +81,14 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     }
 
     @Override
-    public void update(BlogEntry entry)throws IOException{
-        Map<String, Object> jsonMap = new HashMap<>();
-        jsonMap.put("authorId", entry.getAuthorId());
-        jsonMap.put("title", entry.getTitle());
-        jsonMap.put("publish", entry.getPublish());
-        jsonMap.put("updated", entry.getUpdated());
-        jsonMap.put("content", entry.getContent());
-        jsonMap.put("hash", "0");
-        UpdateRequest request = new UpdateRequest(
-                index,
-                type,
-                entry.getId().toString());
-        request.doc(jsonMap);
+    public void update(BlogEntry entry) throws IOException {
+        String json = mapper.writeValueAsString(entry);
+        String id = String.valueOf(entry.getId());
+        UpdateRequest request = new UpdateRequest(index, type, id).doc(json, XContentType.JSON);
+        logger.info("EsUpdating {} {} {}", index, type, id);
+        logger.debug("EsSource {}", json);
         UpdateResponse updateResponse = client.update(request);
-        logger.info("EsDeleting request {} successful with {}", request, updateResponse);
+        logger.info("EsUpdating request {} successful with {}", request, updateResponse);
     }
 
     @Override
