@@ -7,7 +7,7 @@ import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.domain.repo.BlogRepository;
 import org.librazy.demo.dubbo.domain.repo.UserRepository;
 import org.librazy.demo.dubbo.model.SrpSignupForm;
-import org.librazy.demo.dubbo.model.UserForm;
+import org.librazy.demo.dubbo.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,11 +68,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserEntity update(UserForm userForm) {
-        UserEntity old = loadUserByUsername(String.valueOf(userForm.getId()));
-        old.setAvatar(userForm.getAvatar());
-        old.setBio(userForm.getBio());
-        old.setNick(userForm.getNick());
+    public UserEntity update(UserEntity old, User userForm) {
+        if (userForm.getEmail() != null) {
+            old.setEmail(userForm.getEmail());
+        }
+        if (userForm.getAvatar() != null) {
+            old.setAvatar(userForm.getAvatar());
+        }
+        if (userForm.getBio() != null) {
+            old.setBio(userForm.getBio());
+        }
+        if (userForm.getNick() != null) {
+            old.setNick(userForm.getNick());
+        }
         return userRepository.saveAndFlush(old);
     }
 

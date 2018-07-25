@@ -2,8 +2,11 @@ language: java
 env:
 - ES_VERSION=6.3.1 ES_DOWNLOAD_URL=https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz
 install:
+- git fetch --unshallow
 - sudo ./install_fossa.sh
-- wget ${ES_DOWNLOAD_URL}
+- mkdir -p ~/Download && cd ~/Download
+- wget -nc ${ES_DOWNLOAD_URL}
+- cd - && cp ~/Download/* .
 - tar -xzf elasticsearch-${ES_VERSION}.tar.gz
 - yes | sudo ./elasticsearch-${ES_VERSION}/bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v${ES_VERSION}/elasticsearch-analysis-ik-${ES_VERSION}.zip
 - ./elasticsearch-${ES_VERSION}/bin/elasticsearch &
@@ -21,12 +24,14 @@ after_success:
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+- rm -f  $HOME/.gradle/caches/4.8/fileHashes/fileHashes.bin
+- rm -f  $HOME/.gradle/caches/4.8/fileHashes/fileHashes.lock
 cache:
   directories:
-  - $HOME/elasticsearch-${ES_VERSION}.tar.gz
-  - $HOME/elasticsearch-${ES_VERSION}.tar.gz
+  - $HOME/Download
   - $HOME/.gradle/caches/
   - $HOME/.gradle/wrapper/
+
 addons:
   sonarcloud:
     organization: "librazy-github"

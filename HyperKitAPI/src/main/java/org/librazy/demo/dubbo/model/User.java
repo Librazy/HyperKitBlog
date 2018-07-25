@@ -3,15 +3,12 @@ package org.librazy.demo.dubbo.model;
 import org.librazy.demo.dubbo.domain.UserEntity;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 
-public class UserForm implements Serializable {
+public class User implements Serializable {
 
-    private static final long serialVersionUID = -3527158508891454204L;
+    private static final long serialVersionUID = -3568982098834689378L;
 
     private Long id;
-
-    private Timestamp version;
 
     private String email;
 
@@ -21,25 +18,14 @@ public class UserForm implements Serializable {
 
     private String bio;
 
-    protected UserForm() {
-
-    }
-
-    public UserForm(String email, String nick) {
-        this.email = email;
-        this.nick = nick;
-    }
-
-    public UserForm(long id, String email) {
-        this.id = id;
-        this.email = email;
-    }
-
-    public UserForm(UserEntity userEntity) {
-        this(userEntity.getId(), userEntity.getEmail());
-        this.avatar = userEntity.getAvatar();
-        this.bio = userEntity.getBio();
-        this.nick = userEntity.getNick();
+    public static User fromEntity(UserEntity userEntity) {
+        User userForm = new User();
+        userForm.setId(userEntity.getId());
+        userForm.setEmail(userEntity.getEmail());
+        userForm.setAvatar(userEntity.getAvatar());
+        userForm.setBio(userEntity.getBio());
+        userForm.setNick(userEntity.getNick());
+        return userForm;
     }
 
     public Long getId() {
@@ -78,14 +64,6 @@ public class UserForm implements Serializable {
         this.avatar = avatar;
     }
 
-    public Timestamp getVersion() {
-        return version;
-    }
-
-    protected void setVersion(Timestamp version) {
-        this.version = version;
-    }
-
     public String getBio() {
         return bio;
     }
@@ -93,6 +71,4 @@ public class UserForm implements Serializable {
     public void setBio(String bio) {
         this.bio = bio;
     }
-
-
 }
