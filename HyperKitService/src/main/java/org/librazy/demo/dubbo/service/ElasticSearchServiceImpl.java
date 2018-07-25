@@ -8,6 +8,8 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
@@ -26,9 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -76,6 +76,24 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         DeleteResponse deleteResponse = client.delete(deleteRequest);
         logger.info("EsDeleting request {} successful with {}", deleteRequest, deleteResponse);
 
+    }
+
+    @Override
+    public void update(BlogEntry entry)throws IOException{
+        Map<String, Object> jsonMap = new HashMap<>();
+        jsonMap.put("authorId", entry.getAuthorId());
+        jsonMap.put("title", entry.getTitle());
+        jsonMap.put("publish", entry.getPublish());
+        jsonMap.put("updated", entry.getUpdated());
+        jsonMap.put("content", entry.getContent());
+        jsonMap.put("hash", "0");
+        UpdateRequest request = new UpdateRequest(
+                index,
+                type,
+                entry.getId().toString());
+        request.doc(jsonMap);
+        UpdateResponse updateResponse = client.update(request);
+        logger.info("EsDeleting request {} successful with {}", request, updateResponse);
     }
 
     @Override
