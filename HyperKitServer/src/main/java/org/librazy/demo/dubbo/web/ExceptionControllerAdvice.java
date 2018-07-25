@@ -22,7 +22,10 @@ public class ExceptionControllerAdvice {
         logger.warn("exception in controller: ", ex);
         Throwable mostSpecificCause = NestedExceptionUtils.getMostSpecificCause(ex);
         if (mostSpecificCause.getClass().equals(EntityNotFoundException.class)) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(MessageResult.from(mostSpecificCause.getMessage()));
+        }
+        if (mostSpecificCause.getClass().equals(BadRequestException.class)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(MessageResult.from(mostSpecificCause.getMessage()));
         }
         if (mostSpecificCause.getClass().equals(UnauthorizedException.class)){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(MessageResult.from(mostSpecificCause.getMessage()));
@@ -30,9 +33,10 @@ public class ExceptionControllerAdvice {
         if (mostSpecificCause.getClass().equals(ForbiddenException.class)){
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(MessageResult.from(mostSpecificCause.getMessage()));
         }
-        if (mostSpecificCause.getClass().equals(BadRequestException.class)){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(MessageResult.from(mostSpecificCause.getMessage()));
+        if (mostSpecificCause.getClass().equals(NotFoundException.class)){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(MessageResult.from(mostSpecificCause.getMessage()));
         }
+
         if (mostSpecificCause.getClass().equals(ConflictException.class)){
             return ResponseEntity.status(HttpStatus.CONFLICT).body(MessageResult.from(mostSpecificCause.getMessage()));
         }

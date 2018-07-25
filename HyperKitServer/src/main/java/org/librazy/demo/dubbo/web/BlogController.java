@@ -1,6 +1,7 @@
 package org.librazy.demo.dubbo.web;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
@@ -12,6 +13,7 @@ import org.librazy.demo.dubbo.model.IdResult;
 import org.librazy.demo.dubbo.service.BlogService;
 import org.librazy.demo.dubbo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.WebDataBinder;
@@ -39,10 +41,12 @@ public class BlogController {
         this.blogService = blogService;
     }
 
+    @ApiOperation("创建博文")
     @ApiResponses(
             @ApiResponse(code = 201, message = "成功创建博文", response = IdResult.class)
     )
-    @PostMapping("/blog/")
+    @ResponseStatus(value = HttpStatus.CREATED)
+    @PostMapping(value = "/blog/", consumes = APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('USER') && (#blogForm.authorId.toString().equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #blogForm.authorId))")
     public ResponseEntity<IdResult> create(@RequestBody BlogEntry blogForm) throws IOException {
         UserEntity author = userService.loadUserByUsername(String.valueOf(blogForm.getAuthorId()));
@@ -50,12 +54,13 @@ public class BlogController {
         return ResponseEntity.created(URI.create("/blog/" + blogEntryEntity.getId() + "/")).body(IdResult.from(blogEntryEntity.getId()));
     }
 
+    @ApiOperation("更新博文")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "成功更新博文", response = IdResult.class),
+            @ApiResponse(code = 200, message = "成功更新博文", response = BlogEntry.class),
             @ApiResponse(code = 400, message = "更新的博文ID不符"),
             @ApiResponse(code = 404, message = "找不到博文"),
     })
-    @RequestMapping(value = "/blog/{entry:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    @RequestMapping(value = "/blog/{entry:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT}, consumes = APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('USER') && (#blogForm.authorId.toString().equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #blogForm.authorId))")
     public ResponseEntity<BlogEntry> update(@PathVariable BlogEntryEntity entry, @RequestBody BlogEntry blogForm) throws IOException {
         if ((blogForm.getId() != null) && (entry.getId() != blogForm.getId())) {
@@ -65,10 +70,12 @@ public class BlogController {
         return ResponseEntity.ok().body(BlogEntry.fromEntity(update));
     }
 
+    @ApiOperation("删除博文")
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "成功删除博文"),
             @ApiResponse(code = 404, message = "找不到博文"),
     })
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @DeleteMapping("/blog/{entry:\\d+}/")
     @PreAuthorize("hasRole('USER') && (#entry.author.username.equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #entry.author.username))")
     public ResponseEntity<Void> delete(@PathVariable BlogEntryEntity entry) throws IOException {
@@ -76,6 +83,7 @@ public class BlogController {
         return ResponseEntity.noContent().build();
     }
 
+    @ApiOperation("获取博文")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "成功获取博文", response = BlogEntry.class),
             @ApiResponse(code = 404, message = "找不到博文"),
@@ -85,6 +93,7 @@ public class BlogController {
         return ResponseEntity.ok(BlogEntry.fromEntity(entry));
     }
 
+    @ApiOperation("搜索博文")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "成功搜索博文"),
     })
