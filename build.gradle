@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+        if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()}
     }
     dependencies {
         classpath 'com.netflix.nebula:gradle-lint-plugin:9.3.4'
@@ -14,7 +14,7 @@ plugins {
 
 apply plugin: 'com.palantir.jacoco-full-report'
 
-repositories { maven{ url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'} }
+repositories { if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()} }
 
 allprojects {
     apply plugin: 'jacoco'
@@ -22,6 +22,9 @@ allprojects {
     apply plugin: 'nebula.lint' // add as many rules here as you'd like
     gradleLint.alwaysRun = false
     gradleLint.rules = ['all-dependency']
+
+    apply from: "$rootDir/ColoredOutput.gradle"
+    project.ext.set("TRAVIS_FOLDING", true)
 }
 
 // https://cristian.io/post/sonar-coverage/

@@ -1,6 +1,7 @@
 package org.librazy.demo.dubbo.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class ChatMessage implements Serializable {
 
@@ -12,12 +13,16 @@ public class ChatMessage implements Serializable {
 
     private Long sender;
 
-    private Long timestamp;
+    private Long timestamp = new Date().getTime();
 
     private Long mid;
 
-    public ChatMessage() {
-        timestamp = System.currentTimeMillis();
+    protected ChatMessage() {
+    }
+
+    public ChatMessage(Long mid, MessageType type) {
+        this.type = type;
+        this.mid = mid;
     }
 
     public Long getMid() {

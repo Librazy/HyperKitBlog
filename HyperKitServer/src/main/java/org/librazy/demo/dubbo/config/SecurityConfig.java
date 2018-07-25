@@ -49,7 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/", "/favicon.ico", "/resources/**", "/signup",
                         "/register", "/challenge", "/authenticate", "/h2-console/**",
                         "/code", "/stomp", "/swagger-**" , "/swagger-resources/**",
-                        "/webjars/**", "/v2/**")
+                        "/webjars/**", "/v2/**", "/blog/**")
                 .permitAll()
                 .anyRequest().authenticated().and()
                 .exceptionHandling().authenticationEntryPoint(new Http401AuthenticationEntryPoint());

@@ -33,7 +33,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.MediaType;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -389,7 +389,7 @@ class RestApiAndWsTest {
                 messageReceived[0] = true;
             }
         });
-        stompSession.send("/app/broadcast", new ChatMessage().setMid(1L).setContent("Content"));
+        stompSession.send("/app/broadcast", new ChatMessage(1L, ChatMessage.MessageType.TEXT).setContent("Content"));
         TimeUnit.SECONDS.sleep(1);
         assertTrue(messageReceived[0]);
 
@@ -649,6 +649,15 @@ class RestApiAndWsTest {
         blogEntry.setContent("Content keyword and 3");
         ResponseEntity<BlogEntry> update2Entry = testRestTemplate.exchange(RequestEntity.put(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), BlogEntry.class);
         assertEquals(200, update2Entry.getStatusCodeValue());
+
+        ResponseEntity<List<BlogEntrySearchResult>> search = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/search?q=keyword")).build(), new ParameterizedTypeReference<List<BlogEntrySearchResult>>() {
+        });
+        assertEquals(200, search.getStatusCodeValue());
+        List<BlogEntrySearchResult> searchResults = search.getBody();
+        assertNotNull(searchResults);
+        assertEquals(1, searchResults.size());
+        assertEquals(id, searchResults.get(0).getId());
+        assertTrue(searchResults.get(0).getContent().contains("<em>"));
 
         blogEntry.setId(id + 1);
         blogEntry.setContent("Content keyword and 4");

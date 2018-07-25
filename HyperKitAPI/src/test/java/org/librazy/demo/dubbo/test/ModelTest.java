@@ -9,7 +9,7 @@ class ModelTest {
 
     @Test
     void ChatMessageTest() {
-        ChatMessage chatMessage = new ChatMessage();
+        ChatMessage chatMessage = new ChatMessage(1L, ChatMessage.MessageType.TEXT);
         chatMessage.setContent("Content");
         assertEquals("Content", chatMessage.getContent());
     }

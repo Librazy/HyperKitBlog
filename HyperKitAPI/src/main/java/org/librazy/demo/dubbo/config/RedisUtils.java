@@ -20,7 +20,9 @@ public class RedisUtils {
 
     // SRP Session UserAgent, String
     private static final String USER_SESSION_UA = "ua"; // user:<id>:session:<sid>:ua
+
     private static final String USER_RECORDS = "user:{0}:{1}";
+
     private static final String USER_SESSION_RECORDS = "user:{0}:session:{1}:{2}";
 
     private RedisUtils() {
