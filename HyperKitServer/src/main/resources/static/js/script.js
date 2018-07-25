@@ -114,15 +114,15 @@ if ( typeof define === 'function' && define.amd ) {
     var triggerBttn = document.getElementById( 'trigger-overlay' ),
         overlay = document.querySelector( 'div.overlay' ),
         closeBttn = overlay.querySelector( 'button.overlay-close' );
-        transEndEventNames = {
+    let transEndEventNames = {
             'WebkitTransition': 'webkitTransitionEnd',
             'MozTransition': 'transitionend',
             'OTransition': 'oTransitionEnd',
             'msTransition': 'MSTransitionEnd',
             'transition': 'transitionend'
         },
-        transEndEventName = transEndEventNames[ Modernizr.prefixed( 'transition' ) ],
-        support = { transitions : Modernizr.csstransitions };
+        transEndEventName = transEndEventNames[Modernizr.prefixed('transition')],
+        support = {transitions: Modernizr.csstransitions};
 
     function toggleOverlay() {
         if( classie.has( overlay, 'open' ) ) {
