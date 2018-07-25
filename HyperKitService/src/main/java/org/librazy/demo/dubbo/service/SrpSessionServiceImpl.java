@@ -56,7 +56,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
     public void loadSession(long id) throws IOException, ClassNotFoundException {
         this.id = id;
         String b64os = connection.sync().get(RedisUtils.srpSession(String.valueOf(id)));
-        if (b64os == null) throw new IllegalStateException();
+        if (b64os == null) throw new IllegalStateException(String.valueOf(id));
         byte[] bs = Base64.getDecoder().decode(b64os);
         ByteArrayInputStream bais = new ByteArrayInputStream(bs);
         ObjectInputStream ois = new ObjectInputStream(bais);
@@ -73,6 +73,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(session);
         String b64os = Base64.getEncoder().encodeToString(baos.toByteArray());
+        logger.info("SRP step 1: {}", RedisUtils.srpSession(String.valueOf(id)));
         String result = connection.sync().set(RedisUtils.srpSession(String.valueOf(id)), b64os, SetArgs.Builder.ex(30).nx());
         if (!OK.equals(result)) {
             throw new IllegalStateException("session already exists");
@@ -89,7 +90,8 @@ public class SrpSessionServiceImpl implements SrpSessionService {
             userSessionService.newSession(String.valueOf(id), sid, ua, key);
             return m2;
         } catch (Exception e) {
-            throw new IllegalArgumentException(e);
+            logger.error("SRP step 2 error:", e);
+            throw new IllegalArgumentException(e.getMessage());
         } finally {
             connection.sync().del(RedisUtils.srpSession(String.valueOf(id)));
         }
@@ -107,7 +109,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
     public void saveSignup(SrpSignupForm signupForm) throws JsonProcessingException {
         if (id >= 0) throw new IllegalArgumentException("Trying to run saveSignup with positive id:" + id);
         String set = connection.sync().set(RedisUtils.signupSession(String.valueOf(id)), mapper.writeValueAsString(signupForm), SetArgs.Builder.ex(30).nx());
-        logger.info("save signup of {}: {}", signupForm.getEmail(), set);
+        logger.info("SRP save signup of {}: {}", signupForm.getEmail(), set);
         if (!OK.equals(set)) {
             throw new IllegalStateException("signup form already exists");
         }
@@ -116,6 +118,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
     @Override
     public SrpSignupForm getSignup() throws IOException {
         if (id >= 0) throw new IllegalStateException("Trying to run getSignup with positive id:" + id);
+        logger.info("SRP get signup {}", id);
         String json = connection.sync().get(RedisUtils.signupSession(String.valueOf(id)));
         return mapper.readerFor(SrpSignupForm.class).readValue(json);
     }
@@ -123,6 +126,7 @@ public class SrpSessionServiceImpl implements SrpSessionService {
     @Override
     public void confirmSignup(long now) {
         String sid = session.getSessionKey(true);
+        logger.info("SRP confirm signup {} {}", id, now);
         if (id >= 0) throw new IllegalStateException("Trying to run confirmSignup with positive id:" + id);
         userSessionService.renameId(String.valueOf(id), sid, String.valueOf(now));
     }

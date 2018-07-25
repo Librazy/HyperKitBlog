@@ -52,14 +52,14 @@ export default class Srp {
         this.aes(aesKey, exp);
     }
 
-    static async doLogin(phone, password, rememberMe) {
+    static async doLogin(email, password, rememberMe) {
         const SRP6JavascriptClientSession = clientSessionFactory(SRP6CryptoParams.N_base10, SRP6CryptoParams.g_base10, SRP6CryptoParams.k_base16);
         const srpClient = new SRP6JavascriptClientSession();
-        const respCh = Net.postRaw('/challenge', { phone: phone });
-        srpClient.step1(phone, password);
+        const respCh = Net.postRaw('/challenge', { email: email });
+        srpClient.step1(email, password);
         const responseCh = (await respCh).data;
         let credentials = srpClient.step2(responseCh.salt, responseCh.b);
-        const respSi = await Net.postRaw('/authenticate', { phone: phone, password: credentials.M1 + ":" + credentials.A });
+        const respSi = await Net.postRaw('/authenticate', { email: email, password: credentials.M1 + ":" + credentials.A });
         if (respSi.status === 200) {
             const responseSi = respSi.data;
             srpClient.step3(responseSi.m2);
@@ -71,13 +71,13 @@ export default class Srp {
         return respSi;
     }
 
-    static async doRegister(phone, password, nick, code) {
+    static async doRegister(email, password, nick, code) {
         const SRP6JavascriptClientSession = clientSessionFactory(SRP6CryptoParams.N_base10, SRP6CryptoParams.g_base10, SRP6CryptoParams.k_base16);
         const srpClient = new SRP6JavascriptClientSession();
         const salt = srpClient.generateRandomSalt();
-        const verifier = srpClient.generateVerifier(salt, phone, password);
-        const respUpP = Net.postRaw('/signup', { salt: salt, phone: phone, verifier: verifier, nick: nick, code: code });
-        srpClient.step1(phone, password);
+        const verifier = srpClient.generateVerifier(salt, email, password);
+        const respUpP = Net.postRaw('/signup', { salt: salt, email: email, verifier: verifier, nick: nick, code: code });
+        srpClient.step1(email, password);
         const respUp = await respUpP;
         const responseUp = respUp.data;
         if (respUp.status !== 202) {

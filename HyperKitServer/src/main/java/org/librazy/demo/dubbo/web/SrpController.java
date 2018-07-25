@@ -71,7 +71,7 @@ public class SrpController {
             throw new ConflictException("code;");
         }
         try {
-            long fakeid = -Math.abs(BigIntegerUtils.bigIntegerFromBytes(SecurityInstanceUtils.getSha256().digest(signupForm.getEmail().getBytes())).longValue());
+            long fakeid = -Math.abs(BigIntegerUtils.bigIntegerFromBytes(SecurityInstanceUtils.getSha256().digest(signupForm.getEmail().getBytes())).longValue() % 9000000000000000L); // Preventing overflow in js
             UserEntity user = new UserEntity(fakeid, signupForm.getEmail());
             SrpAccountEntity account = new SrpAccountEntity(user, signupForm.getSalt(), signupForm.getVerifier());
             session.newSession(config.n, config.g);
@@ -134,12 +134,14 @@ public class SrpController {
             try {
                 session.newSession(config.n, config.g);
                 String b = session.step1(realAccount);
+                logger.error("SRP challenge account {}", challengeForm.getEmail());
                 return ResponseEntity.ok(SrpChallengeResult.from(b, realAccount.getSalt()));
             } catch (Exception e) {
                 logger.warn("challenge failed with exception", e);
                 throw new BadRequestException(";challenge failed");
             }
         } else {
+            logger.error("SRP faking account {}", challengeForm.getEmail());
             final SrpAccountEntity fakeAccount = new SrpAccountEntity(new UserEntity(SecurityInstanceUtils.getStrongRandom().nextLong(), challengeForm.getEmail()), fakeSalt);
             final SRP6JavascriptServerSession fakeSession = new SRP6JavascriptServerSessionSHA256(
                     config.n, config.g);

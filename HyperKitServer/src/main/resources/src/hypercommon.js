@@ -9,4 +9,3 @@ window.Srp = Srp;
 import 'bootstrap';
 import 'pace';
 
-import './script';
