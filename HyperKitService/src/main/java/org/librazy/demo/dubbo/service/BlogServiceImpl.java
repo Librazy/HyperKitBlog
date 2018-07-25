@@ -47,12 +47,14 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public BlogEntryEntity update(BlogEntry entry) throws IOException {
-        BlogEntryEntity old = get(entry.getId());
-        old.setContent(entry.getContent());
-
-        old.setTitle(entry.getTitle());
-        BlogEntryEntity entity = blogRepository.save(old);
+    public BlogEntryEntity update(BlogEntryEntity old, BlogEntry entry) throws IOException {
+        if (entry.getContent() != null) {
+            old.setContent(entry.getContent());
+        }
+        if (entry.getTitle() != null) {
+            old.setTitle(entry.getTitle());
+        }
+        BlogEntryEntity entity = blogRepository.saveAndFlush(old);
         elasticSearchService.put(BlogEntry.fromEntity(entity));
         return entity;
     }

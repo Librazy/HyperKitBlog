@@ -51,9 +51,13 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.persistence.EntityManager;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -173,20 +177,20 @@ class RestApiAndWsTest {
 
         ResponseEntity<Map> code = testRestTemplate.postForEntity("/code", challengeForm, Map.class);
         assertNotNull(code.getBody());
-        assertEquals("ok", code.getBody().get("status"));
+        assertEquals(200, code.getStatusCodeValue());
         assertNotNull(code.getBody().get("mock"));
         String mockCode = (String) code.getBody().get("mock");
 
         ResponseEntity<Map> codeReplay = testRestTemplate.postForEntity("/code", challengeForm, Map.class);
         assertNotNull(codeReplay.getBody());
-        assertEquals("error", codeReplay.getBody().get("status"));
+        assertEquals(429, codeReplay.getStatusCodeValue());
         assertNull(codeReplay.getBody().get("mock"));
 
         SrpChallengeForm invalidChallengeForm = new SrpChallengeForm();
         invalidChallengeForm.setEmail("invalid email");
         ResponseEntity<Map> codeInvalid = testRestTemplate.postForEntity("/code", invalidChallengeForm, Map.class);
         assertNotNull(codeInvalid.getBody());
-        assertEquals("error", codeInvalid.getBody().get("status"));
+        assertEquals(400, codeInvalid.getStatusCodeValue());
         assertNull(codeInvalid.getBody().get("mock"));
 
         signupForm.setCode("badcode");
@@ -194,19 +198,17 @@ class RestApiAndWsTest {
         assertEquals(409, badSignup.getStatusCodeValue());
 
         signupForm.setCode(mockCode);
-        ResponseEntity<Map> signup = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
+        ResponseEntity<SrpChallengeResult> signup = testRestTemplate.postForEntity("/signup", signupForm, SrpChallengeResult.class);
         assertEquals(202, signup.getStatusCodeValue());
-        Map<String, String> signupBody = signup.getBody();
+        SrpChallengeResult signupBody = signup.getBody();
         assertNotNull(signupBody);
-        assertEquals("ok", signupBody.get("status"));
-        assertNotNull(signupBody.get("id"));
-        assertNotNull(signupBody.get("salt"));
-        assertNotNull(signupBody.get("b"));
+        assertNotNull(signupBody.getSalt());
+        assertNotNull(signupBody.getB());
 
         // got server reply with our signup parameters
-        signupSession.step2(signupBody.get("salt"), signupBody.get("b"));
+        signupSession.step2(signupBody.getSalt(), signupBody.getB());
         SrpRegisterForm registerForm = new SrpRegisterForm();
-        registerForm.setId(Long.valueOf(signupBody.get("id")));
+        registerForm.setId(signupBody.getId());
         assertTrue(registerForm.getId() < 0);
         registerForm.setPassword(signupSession.getClientEvidenceMessage() + ":" + signupSession.getPublicClientValue());
 
@@ -218,14 +220,12 @@ class RestApiAndWsTest {
         assertEquals(401, mustFail401.getStatusCodeValue());
 
         // perform a register to validate our signup params
-        ResponseEntity<Map> register = testRestTemplate.postForEntity("/register", registerForm, Map.class);
+        ResponseEntity<JwtResult> register = testRestTemplate.postForEntity("/register", registerForm, JwtResult.class);
         assertEquals(201, register.getStatusCodeValue());
-        Map<String, String> registerBody = register.getBody();
+        JwtResult registerBody = register.getBody();
         assertNotNull(registerBody);
-        assertEquals("ok", registerBody.get("status"));
-        assertNotNull(registerBody.get("id"));
-        assertNotNull(registerBody.get("m2"));
-        signupSession.step3(registerBody.get("m2"));
+        assertNotNull(registerBody.getM2());
+        signupSession.step3(registerBody.getM2());
         signupSession.getSessionKey(false);
 
         ResponseEntity<Map> signupAlreadyExist = testRestTemplate.postForEntity("/signup", signupForm, Map.class);
@@ -251,40 +251,41 @@ class RestApiAndWsTest {
         srpSigninForm.setEmail(email);
         srpSigninForm.setPassword(signinSession.getClientEvidenceMessage() + ":" + signinSession.getPublicClientValue());
 
-        ResponseEntity<Map> signin = testRestTemplate.postForEntity("/authenticate", srpSigninForm, Map.class);
+        ResponseEntity<JwtResult> signin = testRestTemplate.postForEntity("/authenticate", srpSigninForm, JwtResult.class);
         assertEquals(200, signin.getStatusCodeValue());
-        Map<String, String> signinBody = signin.getBody();
+        JwtResult signinBody = signin.getBody();
         assertNotNull(signinBody);
-        assertEquals("ok", signinBody.get("status"));
-        assertNotNull(signinBody.get("m2"));
-        assertNotNull(signinBody.get("jwt"));
+        assertNotNull(signinBody.getM2());
+        assertNotNull(signinBody.getJwt());
 
-        signinSession.step3(signinBody.get("m2"));
+        signinSession.step3(signinBody.getM2());
         signinSession.getSessionKey(false);
 
         // the signin session works
-        String signinJwt = jwtConfigParams.tokenHead + " " + signinBody.get("jwt");
+        String signinJwt = jwtConfigParams.tokenHead + " " + signinBody.getJwt();
         ResponseEntity<Void> jwtReqSignin = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, signinJwt).build(), Void.class);
         assertEquals(204, jwtReqSignin.getStatusCodeValue());
 
-        assertThrows(IllegalStateException.class, () -> srpSessionService.loadSession(Long.parseLong(signinBody.get("id"))));
+        assertThrows(IllegalStateException.class, () -> srpSessionService.loadSession(signinBody.getId()));
         assertThrows(IllegalStateException.class, () -> srpSessionService.confirmSignup(2333));
         assertThrows(IllegalStateException.class, () -> srpSessionService.getSignup());
         assertThrows(IllegalArgumentException.class, () -> srpSessionService.saveSignup(signupForm));
 
         // keys match
         String key = signinSession.getSessionKey(false);
-        assertEquals(key, userSessionService.getKey(signinBody.get("id"), signinSession.getSessionKey(true)));
+        String siginId = String.valueOf(signinBody.getId());
+        assertEquals(key, userSessionService.getKey(siginId, signinSession.getSessionKey(true)));
 
         // and the signup session still there
-        String registerJwt = jwtConfigParams.tokenHead + " " + registerBody.get("jwt");
+        String registerJwt = jwtConfigParams.tokenHead + " " + registerBody.getJwt();
         ResponseEntity<Void> jwtReqReg = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, registerJwt).build(), Void.class);
         assertEquals(204, jwtReqReg.getStatusCodeValue());
 
-        assertNotNull(userSessionService.getUserAgent(registerBody.get("id"), signupSession.getSessionKey(true)));
+        String registerId = String.valueOf(registerBody.getId());
+        assertNotNull(userSessionService.getUserAgent(registerId, signupSession.getSessionKey(true)));
 
         // delete sessions should invalid their requests but not the others
-        userSessionService.deleteSession(registerBody.get("id"), signupSession.getSessionKey(true));
+        userSessionService.deleteSession(registerId, signupSession.getSessionKey(true));
 
         ResponseEntity<Void> jwtReqRegDeleted = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, registerJwt).build(), Void.class);
         assertEquals(401, jwtReqRegDeleted.getStatusCodeValue());
@@ -356,7 +357,6 @@ class RestApiAndWsTest {
         Map<String, String> refreshBody = refresh.getBody();
         assertNotNull(refreshBody);
         assertNotNull(refreshBody.get("jwt"));
-        assertEquals("ok", refreshBody.get("status"));
 
         ResponseEntity<Void> jwtReqRefresh = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, jwtConfigParams.tokenHead + " " + refreshBody.get("jwt")).build(), Void.class);
         assertEquals(204, jwtReqRefresh.getStatusCodeValue());
@@ -390,20 +390,19 @@ class RestApiAndWsTest {
         TimeUnit.SECONDS.sleep(1);
         assertTrue(messageReceived[0]);
 
-        assertTrue(connection.sync().sismember(RedisUtils.sessions(signinBody.get("id")), signinSession.getSessionKey(true)));
-        connection.sync().expire(RedisUtils.key(signinBody.get("id"), signinSession.getSessionKey(true)), 1);
+        assertTrue(connection.sync().sismember(RedisUtils.sessions(siginId), signinSession.getSessionKey(true)));
+        connection.sync().expire(RedisUtils.key(siginId, signinSession.getSessionKey(true)), 1);
         TimeUnit.SECONDS.sleep(2);
-        assertFalse(connection.sync().sismember(RedisUtils.sessions(signinBody.get("id")), signinSession.getSessionKey(true)));
+        assertFalse(connection.sync().sismember(RedisUtils.sessions(siginId), signinSession.getSessionKey(true)));
 
-        userSessionService.clearSession(registerBody.get("id"));
+        userSessionService.clearSession(registerId);
 
         ResponseEntity<Void> jwtReqSigninDeleted = testRestTemplate.exchange(RequestEntity.get(URI.create("/204")).header(jwtConfigParams.tokenHeader, signinJwt).build(), Void.class);
         assertEquals(401, jwtReqSigninDeleted.getStatusCodeValue());
 
         ResponseEntity<Map> codeReplay2 = testRestTemplate.postForEntity("/code", challengeForm, Map.class);
-        assertNotNull(codeReplay2.getBody());
-        assertEquals("ok", codeReplay2.getBody().get("status"));
-        assertNull(codeReplay2.getBody().get("mock"));
+        assertEquals(200, codeReplay2.getStatusCodeValue());
+        assertNull(codeReplay2.getBody());
     }
 
     @Test
@@ -630,22 +629,22 @@ class RestApiAndWsTest {
         ResponseEntity<Map> createEntry = testRestTemplate.exchange(RequestEntity.post(URI.create("/blog/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Map.class);
         assertEquals(201, createEntry.getStatusCodeValue());
         URI location = createEntry.getHeaders().getLocation();
-        Long id = Long.parseLong((String) Objects.requireNonNull(createEntry.getBody()).get("id"));
+        Long id = Long.valueOf((Integer) Objects.requireNonNull(createEntry.getBody()).get("id"));
         assertNotNull(location);
         assertTrue(location.toString().matches("/blog/\\d+/"));
 
-        ResponseEntity<Void> getEntry = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+        ResponseEntity<BlogEntry> getEntry = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), BlogEntry.class);
         assertEquals(200, getEntry.getStatusCodeValue());
-        ResponseEntity<Void> getEntry2 = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
+        ResponseEntity<BlogEntry> getEntry2 = testRestTemplate.exchange(RequestEntity.get(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), BlogEntry.class);
         assertEquals(200, getEntry2.getStatusCodeValue());
 
         blogEntry.setContent("Content keyword and 2");
-        ResponseEntity<Void> updateEntry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        ResponseEntity<BlogEntry> updateEntry = testRestTemplate.exchange(RequestEntity.put(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), BlogEntry.class);
         assertEquals(200, updateEntry.getStatusCodeValue());
 
         blogEntry.setId(id);
         blogEntry.setContent("Content keyword and 3");
-        ResponseEntity<Void> update2Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        ResponseEntity<BlogEntry> update2Entry = testRestTemplate.exchange(RequestEntity.put(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), BlogEntry.class);
         assertEquals(200, update2Entry.getStatusCodeValue());
 
         ResponseEntity<List<BlogEntrySearchResult>> search = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/search?q=keyword")).build(), new ParameterizedTypeReference<List<BlogEntrySearchResult>>() {
@@ -659,13 +658,13 @@ class RestApiAndWsTest {
 
         blogEntry.setId(id + 1);
         blogEntry.setContent("Content keyword and 4");
-        ResponseEntity<Void> update3Entry = testRestTemplate.exchange(RequestEntity.post(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), Void.class);
+        ResponseEntity<BlogEntry> update3Entry = testRestTemplate.exchange(RequestEntity.put(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), BlogEntry.class);
         assertEquals(400, update3Entry.getStatusCodeValue());
 
         ResponseEntity<Void> deleteEntryUserNotMatch = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
         assertEquals(403, deleteEntryUserNotMatch.getStatusCodeValue());
         ResponseEntity<Void> deleteEntry = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
-        assertEquals(200, deleteEntry.getStatusCodeValue());
+        assertEquals(204, deleteEntry.getStatusCodeValue());
         ResponseEntity<Void> deleteNonExistEntry = testRestTemplate.exchange(RequestEntity.delete(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
         assertEquals(404, deleteNonExistEntry.getStatusCodeValue());
     }
@@ -702,6 +701,19 @@ class RestApiAndWsTest {
         // 不允许重复删除关注
         ResponseEntity<Void> deleteFollowing2 = testRestTemplate.exchange(RequestEntity.delete(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
         assertEquals(409, deleteFollowing2.getStatusCodeValue());
+    }
+
+    @Test
+    void createSpringfoxSwaggerJson() throws Exception {
+        String outputDir = System.getProperty("io.springfox.staticdocs.outputDir");
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity("/v2/api-docs", String.class);
+        assertEquals(200, responseEntity.getStatusCodeValue());
+
+        String swaggerJson = responseEntity.getBody();
+        Files.createDirectories(Paths.get(outputDir));
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputDir, "swagger.json"), StandardCharsets.UTF_8)){
+            writer.write(swaggerJson);
+        }
     }
 
     private UserEntity createTestUser() {

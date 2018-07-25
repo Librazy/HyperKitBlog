@@ -9,10 +9,7 @@ import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
-import org.librazy.demo.dubbo.model.SrpChallengeForm;
-import org.librazy.demo.dubbo.model.SrpRegisterForm;
-import org.librazy.demo.dubbo.model.SrpSigninForm;
-import org.librazy.demo.dubbo.model.SrpSignupForm;
+import org.librazy.demo.dubbo.model.*;
 import org.librazy.demo.dubbo.service.JwtTokenService;
 import org.librazy.demo.dubbo.service.SrpSessionService;
 import org.librazy.demo.dubbo.service.UserService;
@@ -28,19 +25,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 public class SrpController {
-
-    private static final String STATUS = "status";
-
-    private static final String OK = "ok";
-
-    private static final String ERROR = "error";
-
-    private static final String MSG = "msg";
 
     private static Logger logger = LoggerFactory.getLogger(SrpController.class);
 
@@ -68,27 +55,20 @@ public class SrpController {
     }
 
     @PostMapping(value = "signup", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> signup(
+    public ResponseEntity<SrpChallengeResult> signup(
             @Valid @RequestBody SrpSignupForm signupForm,
             Errors errors) {
-        Map<String, String> body = new HashMap<>();
         if (errors.hasErrors()) {
-            body.put(STATUS, ERROR);
-            body.put(MSG, errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
-            return ResponseEntity.badRequest().body(body);
+            throw new BadRequestException(errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
         }
         // never tell user if a email is registered or not
         if (userService.findByEmail(signupForm.getEmail()) != null) {
             logger.warn("try to sign up a email {} that already registered.", signupForm.getEmail());
-            body.put(STATUS, ERROR);
-            body.put(MSG, "code;");
-            return ResponseEntity.status(409).body(body);
+            throw new ConflictException("code;");
         }
         if (!userSessionService.checkCode(signupForm.getEmail(), signupForm.getCode())) {
             logger.warn("email {} code mismatch.", signupForm.getEmail());
-            body.put(STATUS, ERROR);
-            body.put(MSG, "code;");
-            return ResponseEntity.status(409).body(body);
+            throw new ConflictException("code;");
         }
         try {
             long fakeid = -Math.abs(BigIntegerUtils.bigIntegerFromBytes(SecurityInstanceUtils.getSha256().digest(signupForm.getEmail().getBytes())).longValue());
@@ -97,29 +77,20 @@ public class SrpController {
             session.newSession(config.n, config.g);
             String b = session.step1(account);
             session.saveSignup(signupForm);
-            body.put(STATUS, OK);
-            body.put("id", Long.toString(fakeid));
-            body.put("salt", account.getSalt());
-            body.put("b", b);
-            return ResponseEntity.status(202).body(body);
+            return ResponseEntity.status(202).body(SrpChallengeResult.from(fakeid, b, account.getSalt()));
         } catch (Exception e) {
             logger.warn("Invalid srp signup received", e);
-            body.put(STATUS, ERROR);
-            body.put(MSG, ";invalid srp signup");
-            return ResponseEntity.badRequest().body(body);
+            throw new BadRequestException(";invalid srp signup");
         }
     }
 
     @PostMapping(value = "register", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> register(
+    public ResponseEntity<JwtResult> register(
             @RequestHeader("User-Agent") String userAgent,
             @Valid @RequestBody SrpRegisterForm srpRegisterForm,
             Errors errors) {
-        Map<String, String> body = new HashMap<>();
         if (errors.hasErrors()) {
-            body.put(STATUS, ERROR);
-            body.put(MSG, errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
-            return ResponseEntity.badRequest().body(body);
+            throw new BadRequestException(errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
         }
         try {
             final String[] arrayAandM1 = srpRegisterForm.getPassword().split(":");
@@ -131,18 +102,12 @@ public class SrpController {
                 SrpSignupForm signupForm = session.getSignup();
                 UserEntity user = userService.registerUser(signupForm);
                 session.confirmSignup(user.getId());
-                body.put(STATUS, OK);
-                body.put("id", Long.toString(user.getId()));
-                body.put("m2", m2);
                 String token = jwtTokenService.generateToken(user, session.getSessionKey(true));
-                body.put("jwt", token);
-                return ResponseEntity.status(201).body(body);
+                return ResponseEntity.status(201).body(JwtResult.from(user.getId(), m2, token));
             } else throw new IllegalArgumentException();
         } catch (Exception e) {
             logger.warn("Invalid srp register received", e);
-            body.put(STATUS, ERROR);
-            body.put(MSG, ";invalid srp register");
-            return ResponseEntity.badRequest().body(body);
+            throw new BadRequestException(";invalid srp register");
         }
     }
 
@@ -155,15 +120,11 @@ public class SrpController {
      */
     @PostMapping(value = "challenge", produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    ResponseEntity<Map<String, String>> challenge(
+    ResponseEntity<SrpChallengeResult> challenge(
             @Valid @RequestBody SrpChallengeForm challengeForm,
             Errors errors) {
-        Map<String, String> body = new HashMap<>();
-
         if (errors.hasErrors()) {
-            body.put(STATUS, ERROR);
-            body.put(MSG, errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
-            return ResponseEntity.badRequest().body(body);
+            throw new BadRequestException(errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
         }
 
         final String fakeSalt = hash(config.saltOfFakeSalt + challengeForm.getEmail());
@@ -173,36 +134,27 @@ public class SrpController {
             try {
                 session.newSession(config.n, config.g);
                 String b = session.step1(realAccount);
-                body.put("salt", realAccount.getSalt());
-                body.put("b", b);
-                return ResponseEntity.ok(body);
+                return ResponseEntity.ok(SrpChallengeResult.from(b, realAccount.getSalt()));
             } catch (Exception e) {
                 logger.warn("challenge failed with exception", e);
-                body.put(STATUS, ERROR);
-                body.put(MSG, ";challenge failed");
-                return ResponseEntity.badRequest().body(body);
+                throw new BadRequestException(";challenge failed");
             }
         } else {
             final SrpAccountEntity fakeAccount = new SrpAccountEntity(new UserEntity(SecurityInstanceUtils.getStrongRandom().nextLong(), challengeForm.getEmail()), fakeSalt);
             final SRP6JavascriptServerSession fakeSession = new SRP6JavascriptServerSessionSHA256(
                     config.n, config.g);
             String b = fakeSession.step1(fakeAccount.getUser().getEmail(), fakeSalt, "0");
-            body.put("salt", fakeSalt);
-            body.put("b", b);
-            return ResponseEntity.ok(body);
+            return ResponseEntity.ok(SrpChallengeResult.from(b, fakeSalt));
         }
     }
 
     @PostMapping(value = "authenticate", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> authenticate(
+    public ResponseEntity<JwtResult> authenticate(
             @Valid @RequestBody SrpSigninForm srpSigninForm,
             Errors errors,
             @RequestHeader("User-Agent") String userAgent) {
-        Map<String, String> body = new HashMap<>();
         if (errors.hasErrors()) {
-            body.put(STATUS, ERROR);
-            body.put(MSG, errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
-            return ResponseEntity.badRequest().body(body);
+            throw new BadRequestException(errors.getFieldErrors().stream().reduce("", (s, e) -> s + e.getField() + ";", String::concat));
         }
         try {
             final String[] arrayAandM1 = srpSigninForm.getPassword().split(":");
@@ -214,23 +166,15 @@ public class SrpController {
                 if (ud != null) {
                     session.loadSession(ud.getId());
                     String m2 = session.step2(a, m1, userAgent);
-                    body.put(STATUS, OK);
-                    body.put("m2", m2);
-                    body.put("id", Long.toString(ud.getId()));
                     String token = jwtTokenService.generateToken(ud, session.getSessionKey(true));
-                    body.put("jwt", token);
-                    return ResponseEntity.ok(body);
+                    return ResponseEntity.ok(JwtResult.from(ud.getId(), m2, token));
                 } else {
-                    body.put(STATUS, ERROR);
-                    body.put(MSG, ";username or password error");
-                    return ResponseEntity.status(401).body(body);
+                    throw new UnauthorizedException(";username or password error");
                 }
             } else throw new IllegalArgumentException();
         } catch (Exception e) {
             logger.warn("authenticate failed with exception", e);
-            body.put(STATUS, ERROR);
-            body.put(MSG, ";username or password error");
-            return ResponseEntity.status(401).body(body);
+            throw new UnauthorizedException(";username or password error");
         }
     }
 

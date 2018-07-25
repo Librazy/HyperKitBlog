@@ -4,7 +4,7 @@ import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.SrpAccountEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.SrpSignupForm;
-import org.librazy.demo.dubbo.model.UserForm;
+import org.librazy.demo.dubbo.model.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +45,7 @@ public interface UserService extends UserDetailsService {
     UserEntity findByEmail(String email);
 
     @Transactional
-    UserEntity update(UserForm userForm);
+    UserEntity update(UserEntity user, User userForm);
 
     @Transactional
     boolean addStarredEntries(UserEntity user, BlogEntryEntity blog);

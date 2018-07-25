@@ -46,9 +46,11 @@ public interface BlogService {
     /**
      * 更新博文
      *
-     * @param blogForm 博文
+     * @param old   博文实体
+     * @param entry 博文
      * @return 博文实体
      */
     @Transactional
-    BlogEntryEntity update(BlogEntry blogForm) throws IOException;
+    BlogEntryEntity update(BlogEntryEntity old, BlogEntry entry) throws IOException;
+
 }
