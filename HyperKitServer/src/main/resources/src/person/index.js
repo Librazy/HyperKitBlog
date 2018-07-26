@@ -1,5 +1,6 @@
 import entryFragment from '../entryFragment';
 import follow from '../follow';
+import star from '../star';
 
 $(async () => {
     var userId = Net.getQuery()["id"];
@@ -15,17 +16,20 @@ $(async () => {
     let main = $("main");
     let followBtn = $("#followbutton");
 
-    if(canFollow){
+    if(Srp.isSignined() && entry.authorId !== Srp.uid()){
+        starBtn.click(() => {
+            star(id);
+        });
         followBtn.click(() => {
-            follow(userId);
+            follow(entry.authorId);
         });
     } else {
-        follow.hide();
+        followBtn.hide();
     }
 
     Net.get("/user/" + userId + "/").then((userInfo) => {
         if (userInfo.status == 404) {
-            alert("?????");
+            alert("用户不存在");
             window.location.href = "/index.html"
         }
         const nick = $("#nick");
@@ -45,7 +49,7 @@ $(async () => {
 
     Net.get("/blog/user/" + userId + "/").then((blogInfo) => {
         if (blogInfo.status == 404) {
-            alert("?????");
+            alert("用户不存在");
             window.location.href = "/index.html"
         }
         let entries = blogInfo.data.content;
