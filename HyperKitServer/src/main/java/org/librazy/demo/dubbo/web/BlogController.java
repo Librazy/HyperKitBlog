@@ -102,7 +102,7 @@ public class BlogController {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "成功搜索博文"),
     })
-    @GetMapping("/blog/search")
+    @GetMapping("/blog/search/")
     public ResponseEntity<List<BlogEntrySearchResult>> search(@RequestParam("q") String keyword) throws IOException {
         return ResponseEntity.ok(blogService.search(keyword));
     }

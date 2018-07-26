@@ -21,6 +21,14 @@ let getUserInfo = async (uid) => {
     return ud;
 }
 
+let searchSubmit = $("#searchSubmit");
+let searchForm = $("#searchForm");
+if (searchSubmit && searchForm) {
+    searchSubmit.click(() =>{
+        window.location.href = "/main.html?q=" + searchForm.val();
+    });
+}
+
 window.uInfo = uInfo;
 window.getUserInfo = getUserInfo;
 
