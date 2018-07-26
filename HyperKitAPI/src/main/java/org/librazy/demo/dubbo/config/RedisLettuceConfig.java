@@ -13,6 +13,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.env.Environment;
 import redis.embedded.RedisServer;
 
 /**
@@ -48,16 +49,20 @@ public class RedisLettuceConfig {
      */
     @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
     @Bean(destroyMethod = "stop")
-    public RedisServer redisServer() {
-        RedisServer redisServer = RedisServer.builder().port(port).setting("maxmemory 128M").setting("bind 127.0.0.1").build();
-        logger.info("embedded redis server starting");
-        try {
-            redisServer.start();
-            logger.info("embedded redis server started");
-        } catch (RuntimeException e) {
-            logger.warn("embedded redis server failed to start", e);
+    public RedisServer redisServer(Environment environment) {
+        if (environment.acceptsProfiles("dev", "test-default")) {
+            RedisServer redisServer = RedisServer.builder().port(port).setting("maxmemory 128M").setting("bind 127.0.0.1").build();
+            logger.info("embedded redis server starting");
+            try {
+                redisServer.start();
+                logger.info("embedded redis server started");
+            } catch (RuntimeException e) {
+                logger.warn("embedded redis server failed to start", e);
+            }
+            return redisServer;
+        } else {
+            return null;
         }
-        return redisServer;
     }
 
     /**
@@ -68,7 +73,7 @@ public class RedisLettuceConfig {
      */
     @Bean(destroyMethod = "shutdown")
     ClientResources clientResources(RedisServer redisServer) {
-        logger.info("embedded redis server status {}", redisServer.isActive());
+        logger.info("embedded redis server status {}", redisServer == null ? "null" : redisServer.isActive());
         return DefaultClientResources.create();
     }
 
@@ -79,8 +84,12 @@ public class RedisLettuceConfig {
      * @return Redis 客户端
      */
     @Bean(destroyMethod = "shutdown")
-    RedisClient redisClient(ClientResources clientResources) {
-        return RedisClient.create(clientResources, RedisURI.builder().withHost(host).withPort(port).withPassword(password).build());
+    RedisClient redisClient(Environment environment, ClientResources clientResources) {
+        RedisClient redisClient = RedisClient.create(clientResources, RedisURI.builder().withHost(host).withPort(port).withPassword(password).build());
+        if (environment.acceptsProfiles("dev", "test-default")) {
+            redisClient.connect().sync().flushall();
+        }
+        return redisClient;
     }
 
     /**
