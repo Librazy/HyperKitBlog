@@ -15,7 +15,7 @@ $(async () => {
     let main = $("main");
     let followBtn = $("#followbutton");
 
-    if(Srp.isSignined() && userId !== Srp.uid()){
+    if(Srp.isSignined() && userId != Srp.uid()){
         followBtn.click(() => {
             follow(userId);
         });

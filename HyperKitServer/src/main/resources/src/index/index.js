@@ -1,9 +1,12 @@
 import entryFragment from '../entryFragment';
 
 $(async () => {
+    let main = $("main");
     if(Net.getQuery()["q"]){
         Net.get("/blog/search/?q=" + Net.getQuery()["q"]).then((blogInfo) => {
             let entries = blogInfo.data;
+            console.log(entries);
+            console.log(":");
             entries.forEach(async entry => {
                 let id = entry.id;
                 let title = entry.title;
@@ -17,6 +20,8 @@ $(async () => {
     } else {
         Net.get("/blog/").then((blogInfo) => {
             let entries = blogInfo.data.content;
+            console.log(entries);
+            console.log(":");
             entries.forEach(async entry => {
                 let id = entry.id;
                 let title = entry.title;

@@ -25,7 +25,7 @@ $(async () => {
     let fragment = entryFragment(id, title, content, author, updated);
     main.append(fragment);
 
-    if(Srp.isSignined() && entry.authorId !== Srp.uid()){
+    if(Srp.isSignined() && entry.authorId != Srp.uid()){
         starBtn.click(() => {
             star(id);
         });
@@ -40,7 +40,7 @@ $(async () => {
     const entries = $("#entries");
     const followers = $("#followers");
     const followings = $("#followings");
-    nick.href("/person.html?id=" + entry.authorId);
+    nick.attr("href", "/person.html?id=" + entry.authorId);
     nick.text(ad.nick);
     entries.text(ad.blogEntries);
     followers.text(ad.followers);
