@@ -8,7 +8,7 @@ $(async () => {
     let main = $("main");
 
     let entryInfo = await Net.get("/blog/" + entryId + "/");
-    if (entryInfo.status == 404) {
+    if (entryInfo.status !== 200) {
         alert("文章不存在");
         window.location.href = "/index.html"
     }

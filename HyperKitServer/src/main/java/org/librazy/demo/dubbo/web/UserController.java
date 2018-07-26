@@ -10,7 +10,6 @@ import org.librazy.demo.dubbo.model.BadRequestException;
 import org.librazy.demo.dubbo.model.ConflictException;
 import org.librazy.demo.dubbo.model.User;
 import org.librazy.demo.dubbo.service.BlogService;
-import org.librazy.demo.dubbo.service.RecommendationServiceImpl;
 import org.librazy.demo.dubbo.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
