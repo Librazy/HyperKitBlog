@@ -73,8 +73,9 @@ public class SrpSessionServiceImpl implements SrpSessionService {
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(session);
         String b64os = Base64.getEncoder().encodeToString(baos.toByteArray());
-        logger.info("SRP step 1: {}", RedisUtils.srpSession(String.valueOf(id)));
-        String result = connection.sync().set(RedisUtils.srpSession(String.valueOf(id)), b64os, SetArgs.Builder.ex(30).nx());
+        String sessionKey = RedisUtils.srpSession(String.valueOf(id));
+        logger.info("SRP step 1: {}", sessionKey);
+        String result = connection.sync().set(sessionKey, b64os, SetArgs.Builder.ex(30).nx());
         if (!OK.equals(result)) {
             throw new IllegalStateException("session already exists");
         }
