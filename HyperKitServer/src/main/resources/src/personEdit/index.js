@@ -21,7 +21,7 @@ $(async () => {
 
     submitBtn.click(async () => {
         submitBtn.prop("disabled", true);
-        let result = await Net.post("/user/" + uid + "/", {nick: nick.val(), avatar: nick.val(), bio: bio.val()});
+        let result = await Net.put("/user/" + uid + "/", {nick: nick.val(), avatar: nick.val(), bio: bio.val()});
         if(result.status !== 200){
             alert("修改失败");
         }

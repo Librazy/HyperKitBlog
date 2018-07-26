@@ -12,6 +12,7 @@ $(() => {
         let email = emailIpt.val();
         if (!Valid.validEmail(email)) {
             alert("邮箱格式错误");
+            codeBtn.prop("disabled", false);
             return;
         }
         try {
@@ -27,7 +28,7 @@ $(() => {
             registerBtn.prop("disabled", false);
         } catch (error) {
             alert("服务器错误，请稍后尝试");
-            $(e.target).prop("disabled", false);
+            codeBtn.prop("disabled", false);
         }
     });
     registerBtn.click(async (e) => {
@@ -69,6 +70,7 @@ $(() => {
                     return;
                 } else {
                     alert("注册失败 - 请检查是否填写正确");
+                    $(e.target).prop("disabled", false);
                     return;
                 }
             } else if (respRe.status === 201) {
