@@ -19,6 +19,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,9 +50,11 @@ public class BlogController {
     )
     @ResponseStatus(value = HttpStatus.CREATED)
     @PostMapping(value = "/blog/", consumes = APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('USER') && (#blogForm.authorId.toString().equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #blogForm.authorId))")
+    @PreAuthorize("hasRole('USER') && (#blogForm.authorId == null || #blogForm.authorId.toString().equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #blogForm.authorId))")
     public ResponseEntity<IdResult> create(@RequestBody BlogEntry blogForm) throws IOException {
-        UserEntity author = userService.loadUserByUsername(String.valueOf(blogForm.getAuthorId()));
+        UserEntity author = blogForm.getAuthorId() == null ?
+                                    (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal() :
+                                    userService.loadUserByUsername(String.valueOf(blogForm.getAuthorId()));
         BlogEntryEntity blogEntryEntity = blogService.create(author, blogForm);
         return ResponseEntity.created(URI.create("/blog/" + blogEntryEntity.getId() + "/")).body(IdResult.from(blogEntryEntity.getId()));
     }
@@ -63,7 +66,7 @@ public class BlogController {
             @ApiResponse(code = 404, message = "找不到博文"),
     })
     @RequestMapping(value = "/blog/{entry:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT}, consumes = APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('USER') && (#blogForm.authorId.toString().equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #blogForm.authorId))")
+    @PreAuthorize("hasRole('USER') && (#blogForm.authorId == null || #blogForm.authorId.toString().equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #blogForm.authorId))")
     public ResponseEntity<BlogEntry> update(@PathVariable BlogEntryEntity entry, @RequestBody BlogEntry blogForm) throws IOException {
         if ((blogForm.getId() != null) && (entry.getId() != blogForm.getId())) {
             throw new BadRequestException();

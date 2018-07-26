@@ -1,7 +1,8 @@
-$(async () => {
-    if (!Srp.isSignined()) {
-        window.location.href = "/login.html"
-    }
+if (!Srp.isSignined()) {
+    window.location.href = "/login.html"
+}
+
+$(() => {
     let uid = Srp.uid();
     const avatar = $("#avatar");
     const nick = $("#nick");

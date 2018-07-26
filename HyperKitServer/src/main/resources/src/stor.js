@@ -2,7 +2,7 @@ import LSCache from 'lscache'
 
 let stor = (key) => ((val, exp) => {
     if (exp < 0) {
-        console.log("stor: removing " + val + " ：" + exp);
+        console.log("stor: removing " + key + " ：" + val + " ：" + exp);
         LSCache.remove(key);
     } else {
         if (val) {
