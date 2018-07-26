@@ -47,6 +47,14 @@ ext {
     springfoxVersion = '2.9.2'
 }
 
+sourceSets {
+    main {
+        resources {
+            exclude '**/src/*'
+        }
+    }
+}
+
 dependencies {
     compile project(":HyperKitAPI")
     compile project(":HyperKitService")

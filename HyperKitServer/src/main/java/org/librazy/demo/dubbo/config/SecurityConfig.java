@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -46,10 +47,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .headers().frameOptions().sameOrigin().and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
-                .antMatchers("/", "/favicon.ico", "/resources/**", "/static/**", "/signup",
-                        "/register", "/challenge", "/authenticate", "/h2-console/**",
-                        "/code", "/stomp", "/swagger-**", "/swagger-resources/**",
-                        "/webjars/**", "/v2/**", "/blog/**")
+                .antMatchers("/signup", "/register", "/challenge", "/authenticate", "/h2-console/**",
+                        "/code", "/stomp")
+                .permitAll()
+                .antMatchers(HttpMethod.GET, "/user/*/", "/user/*/follower/", "/user/*/following/", "/blog/**",
+                        "/", "/favicon.ico", "/js/**", "/css/**", "/img/**", "/fonts/**",
+                        "/*.html", "/*.js", "/swagger-**", "/swagger-resources/**",
+                        "/webjars/**", "/v2/**")
                 .permitAll()
                 .anyRequest().authenticated().and()
                 .exceptionHandling().authenticationEntryPoint(new Http401AuthenticationEntryPoint());

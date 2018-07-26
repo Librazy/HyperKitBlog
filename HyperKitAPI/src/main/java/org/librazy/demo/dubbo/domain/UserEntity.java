@@ -1,5 +1,7 @@
 package org.librazy.demo.dubbo.domain;
 
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,15 +53,19 @@ public class UserEntity implements UserDetails, Serializable {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
     private SrpAccountEntity srpAccount;
 
+    @LazyCollection(LazyCollectionOption.EXTRA)
     @OneToMany(cascade = {CascadeType.DETACH, CascadeType.REMOVE}, fetch = FetchType.LAZY, mappedBy = "author", orphanRemoval = true)
     private Set<BlogEntryEntity> blogEntries;
 
+    @LazyCollection(LazyCollectionOption.EXTRA)
     @ManyToMany(mappedBy = "stargazers")
     private Set<BlogEntryEntity> starredEntries;
 
+    @LazyCollection(LazyCollectionOption.EXTRA)
     @ManyToMany(mappedBy = "followers")
     private Set<UserEntity> following;
 
+    @LazyCollection(LazyCollectionOption.EXTRA)
     @ManyToMany
     @JoinTable
     private Set<UserEntity> followers;

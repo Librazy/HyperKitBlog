@@ -1,85 +1,104 @@
+
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Login</title>
+<head>
+	<title>Login</title>
 
-		<!-- meta -->
-		<meta charset="UTF-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- meta -->
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	    <!-- css -->
-		<link rel="stylesheet" href="css/bootstrap.min.css">
-		<link rel="stylesheet" href="css/ionicons.min.css">
-		<link rel="stylesheet" href="css/pace.css">
-	    <link rel="stylesheet" href="css/custom.css">
+	<!-- css -->
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/ionicons.min.css">
+	<link rel="stylesheet" href="css/pace.css">
+	<link rel="stylesheet" href="css/custom.css">
+	<!-- js -->
+	<script src="js/jquery-2.1.3.min.js"></script>
+	<script src="js/modernizr.custom.js"></script>
+	<script src="babelPolyfill.js"></script>
+</head>
 
-	    <!-- js -->
-	    <script src="js/jquery-2.1.3.min.js"></script>
-	    <script src="js/bootstrap.min.js"></script>
-	    <script src="js/pace.min.js"></script>
-	    <script src="js/modernizr.custom.js"></script>
-	</head>
-
-	<body id="page">
-		<div class="container">	
-			<header id="site-header">
-				<div class="row">
-					<div class="col-md-4 col-sm-5 col-xs-8">
-						<div class="logo">
-							<h1><a href="index.html">HyperKit</a></h1>
-						</div>
-					</div><!-- col-md-4 -->
-					
-				</div>
-			</header>
-		</div>
-
-		<div class="content-body">
-			<div class="container">
-				<div class="row">
-					<main class="col-md-12">
-						<h1 class="page-title">登录</h1>
-						<article class="post">
-							<div class="entry-content clearfix">
-								<form action="#" method="post" class="contact-form">
-									<div class="row">
-										<div class="col-md-6 col-md-offset-3">
-											邮箱<input type="email" name="email" placeholder="邮箱" required>
-											密码<input type="password" name="password" placeholder="密码" required>
-											<button class="btn-send btn-5 btn-5b ion-ios-paperplane"><span>登录</span></button>
-										</div>
-									</div>	<!-- row -->
-								</form>
-							</div>
-						</article>
-					</main>
-				</div>
-			</div>
-		</div>
-		<footer id="site-footer">
-			<div class="container">
-				<div class="row">
-					<div class="col-md-12">
-						<p class="copyright">&copy; 2014 ThemeWagon.com</p>
+<body id="page">
+	<div class="container">
+		<header id="site-header">
+			<div class="row">
+				<div class="col-md-4 col-sm-5 col-xs-8">
+					<div class="logo">
+						<h1>
+							<a href="index.html">HyperKit</a>
+						</h1>
 					</div>
 				</div>
+				<!-- col-md-4 -->
+
 			</div>
-		</footer>
+		</header>
+	</div>
 
-		<!-- Mobile Menu -->
-		<div class="overlay overlay-hugeinc">
-			<button type="button" class="overlay-close"><span class="ion-ios-close-empty"></span></button>
-			<nav>
-				<ul>
-					<li><a href="index.html">首页</a></li>
-					<li><a href="person.html">个人中心</a></li>
-					<li><a href="register.html">注册</a></li>
-					<li><a href="login.html">登录</a></li>
-				</ul>
-			</nav>
+	<div class="content-body">
+		<div class="container">
+			<div class="row">
+				<main class="col-md-12">
+					<h1 class="page-title">登录</h1>
+					<article class="post">
+						<div class="entry-content clearfix">
+							<form action="#" method="post" class="contact-form">
+								<div class="row">
+									<div class="col-md-6 col-md-offset-3">
+										邮箱
+										<input id="email" type="email" name="email" placeholder="邮箱" required=""> 密码
+										<input id="password" type="password" name="password" placeholder="密码" required="">
+										<button type="button" id="signin" class="btn-send btn-5 btn-5b ion-ios-paperplane">
+											<span>登录</span>
+										</button>
+										<input id="rememberMe" type="checkbox" name="rememberMe" style="display:inline-block;width: auto;margin-left: 2em;">记住我
+									</div>
+								</div>
+								<!-- row -->
+							</form>
+						</div>
+					</article>
+				</main>
+			</div>
 		</div>
+	</div>
+	<footer id="site-footer">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12">
+					<p class="copyright">© 2014 ThemeWagon.com</p>
+				</div>
+			</div>
+		</div>
+	</footer>
 
-		<script src="js/script.js"></script>
-		
-	</body>
+	<!-- Mobile Menu -->
+	<div class="overlay overlay-hugeinc">
+		<button type="button" class="overlay-close">
+			<span class="ion-ios-close-empty"></span>
+		</button>
+		<nav>
+			<ul>
+				<li>
+					<a href="index.html">首页</a>
+				</li>
+				<li>
+					<a href="person.html">个人中心</a>
+				</li>
+				<li>
+					<a href="register.html">注册</a>
+				</li>
+				<li>
+					<a href="login.html">登录</a>
+				</li>
+			</ul>
+		</nav>
+	</div>
+
+	<script src="hypercommon.js"></script>
+	<script src="login.js"></script>
+
+
+</body>
 </html>

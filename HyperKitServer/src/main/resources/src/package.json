@@ -1,0 +1,36 @@
+{
+  "name": "static",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "webpack --progress --development"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "babel-preset-es2017": "^6.24.1",
+    "bootstrap": "^3.3.7",
+    "crypto-js": "^3.1.9-1",
+    "jquery": "^3.3.1",
+    "lscache": "^1.2.0",
+    "pace": "0.0.4",
+    "thinbus-srp": "^1.8.0",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.5",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-2": "^6.24.1",
+    "json-loader": "^0.5.7",
+    "modernizr": "^3.6.0",
+    "modernizr-loader": "^1.0.1",
+    "web-webpack-plugin": "^4.0.1",
+    "webpack": "^4.16.2",
+    "webpack-cli": "^3.1.0"
+  }
+}

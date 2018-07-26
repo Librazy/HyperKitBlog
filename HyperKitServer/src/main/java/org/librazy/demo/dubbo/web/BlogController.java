@@ -13,13 +13,15 @@ import org.librazy.demo.dubbo.model.IdResult;
 import org.librazy.demo.dubbo.service.BlogService;
 import org.librazy.demo.dubbo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
-import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
@@ -97,18 +99,48 @@ public class BlogController {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "成功搜索博文"),
     })
-    @GetMapping("/blog/search")
+    @GetMapping("/blog/search/")
     public ResponseEntity<List<BlogEntrySearchResult>> search(@RequestParam("q") String keyword) throws IOException {
         return ResponseEntity.ok(blogService.search(keyword));
     }
 
+    @ApiOperation("获取所有博文分页列表")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "成功获取用户博文列表"),
+    })
+    @GetMapping("/blog/")
+    public ResponseEntity<Page<BlogEntry>> getBlogPaged(@PageableDefault Pageable page) {
+        Page<BlogEntryEntity> blogEntryEntities = blogService.getBlogPaged(page);
+        Page<BlogEntry> blogEntries = blogEntryEntities.map(BlogEntry::fromEntity);
+        return ResponseEntity.ok(blogEntries);
+    }
+
+    @ApiOperation("获取用户博文分页列表")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "成功获取用户博文列表"),
+            @ApiResponse(code = 404, message = "用户不存在"),
+    })
+    @GetMapping("/blog/user/{user:\\d+}/")
+    public ResponseEntity<Page<BlogEntry>> getUserBlogPaged(@PathVariable UserEntity user, @PageableDefault Pageable page) {
+        Page<BlogEntryEntity> blogEntryEntities = blogService.getUserBlogPaged(user, page);
+        Page<BlogEntry> blogEntries = blogEntryEntities.map(BlogEntry::fromEntity);
+        return ResponseEntity.ok(blogEntries);
+    }
+
+    @ApiOperation("获取用户收藏博文列表")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "成功获取用户收藏博文列表"),
+            @ApiResponse(code = 404, message = "用户不存在"),
+    })
+    @GetMapping("/blog/star/{user:\\d+}/")
+    public ResponseEntity<Page<BlogEntry>> getUserStarPaged(@PathVariable UserEntity user, @PageableDefault Pageable page) {
+        Page<BlogEntryEntity> blogEntryEntities = blogService.getUserStarPaged(user, page);
+        Page<BlogEntry> blogEntries = blogEntryEntities.map(BlogEntry::fromEntity);
+        return ResponseEntity.ok(blogEntries);
+    }
+
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(BlogEntryEntity.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                setValue(blogService.get(Long.valueOf(text)));
-            }
-        });
+        ControllersAdvice.init(binder, userService, blogService);
     }
 }
