@@ -18,6 +18,12 @@ public class User implements Serializable {
 
     private String bio;
 
+    private int blogEntries;
+
+    private int followers;
+
+    private int followings;
+
     public static User fromEntity(UserEntity userEntity) {
         User userForm = new User();
         userForm.setId(userEntity.getId());
@@ -25,6 +31,9 @@ public class User implements Serializable {
         userForm.setAvatar(userEntity.getAvatar());
         userForm.setBio(userEntity.getBio());
         userForm.setNick(userEntity.getNick());
+        userForm.setBlogEntries(userEntity.getBlogEntries().size());
+        userForm.setFollowers(userEntity.getFollowers().size());
+        userForm.setFollowings(userEntity.getFollowing().size());
         return userForm;
     }
 
@@ -70,5 +79,29 @@ public class User implements Serializable {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public int getBlogEntries() {
+        return blogEntries;
+    }
+
+    public void setBlogEntries(int blogEntries) {
+        this.blogEntries = blogEntries;
+    }
+
+    public int getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(int followers) {
+        this.followers = followers;
+    }
+
+    public int getFollowings() {
+        return followings;
+    }
+
+    public void setFollowings(int followings) {
+        this.followings = followings;
     }
 }

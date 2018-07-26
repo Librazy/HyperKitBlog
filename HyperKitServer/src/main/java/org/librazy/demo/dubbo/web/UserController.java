@@ -6,27 +6,22 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
-import org.librazy.demo.dubbo.model.*;
+import org.librazy.demo.dubbo.model.BadRequestException;
+import org.librazy.demo.dubbo.model.ConflictException;
+import org.librazy.demo.dubbo.model.User;
 import org.librazy.demo.dubbo.service.BlogService;
 import org.librazy.demo.dubbo.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
-import java.beans.PropertyEditorSupport;
 import java.net.URI;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -34,8 +29,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping(produces = APPLICATION_JSON_VALUE)
 @RestController
 public class UserController {
-
-    private static Logger logger = LoggerFactory.getLogger(BlogController.class);
 
     private final UserService userService;
 
@@ -72,18 +65,6 @@ public class UserController {
     public ResponseEntity<User> get(@PathVariable UserEntity user) {
         User userForm = User.fromEntity(user);
         return ResponseEntity.ok(userForm);
-    }
-
-    @ApiOperation("获取用户收藏博文列表")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "成功获取用户收藏博文列表"),
-            @ApiResponse(code = 404, message = "用户不存在"),
-    })
-    @GetMapping("/user/{user:\\d+}/star/")
-    public ResponseEntity<Set<BlogEntry>> getStarEntity(@PathVariable UserEntity user) {
-        Set<BlogEntryEntity> blogEntryEntities = user.getStarredEntries();
-        Set<BlogEntry> blogEntries = blogEntryEntities.stream().map(BlogEntry::fromEntity).collect(Collectors.toSet());
-        return ResponseEntity.ok(blogEntries);
     }
 
     @ApiOperation("获取用户关注列表")
@@ -194,24 +175,6 @@ public class UserController {
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(UserEntity.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                try {
-                    setValue(userService.loadUserByUsername(String.valueOf(text)));
-                } catch (UsernameNotFoundException e){
-                    logger.info("binder error when resovling user {}", text);
-                    logger.info("exception: {}", e);
-                    throw new NotFoundException(text);
-                }
-            }
-        });
-
-        binder.registerCustomEditor(BlogEntryEntity.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                setValue(blogService.get(Long.valueOf(text)));
-            }
-        });
+        ControllersAdvice.init(binder, userService, blogService);
     }
 }

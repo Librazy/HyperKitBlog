@@ -1,4 +1,9 @@
+import Net from "../net";
+
 $(() => {
+    if(Net.getQuery()["q"]){
+        Srp.cleanSession();
+    }
     let emailIpt = $("#email");
     let pwdIpt = $("#password");
     let signinBtn = $("#signin");
@@ -20,7 +25,7 @@ $(() => {
             const re = await Srp.doLogin(email, password, rememberMe)
             if (re.status === 200) {
                 alert("登陆成功");
-                // TODO
+                window.location.href = "/person.html?id=" + Srp.uid();
             } else {
                 alert("登陆失败 - 用户名或密码错误");
             }

@@ -1,5 +1,3 @@
-const path = require('path');
-const webpack = require('webpack');
 const {
     AutoWebPlugin
 } = require('web-webpack-plugin');
@@ -7,10 +5,10 @@ const {
 const autoPlugin = new AutoWebPlugin(
     // the directory hold all pages
     './', {
-        template: (pageName) => __dirname + "/" + pageName + "/" + pageName + "Index.html",
+        template: (pageName) => __dirname + "/" + pageName + "/" + pageName + "Page.html",
 
 
-        ignorePages: ['node_modules', 'blog_edit', 'index', 'person_edit', 'single'],
+        ignorePages: ['node_modules'],
 
         // whether output a pagemap.json file which contain all pages has been resolved with AutoWebPlugin in this way:
         // {"page name": "page url",}

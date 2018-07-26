@@ -38,6 +38,7 @@ dependencies {
     compile 'org.elasticsearch:elasticsearch:6.3.2'
     compile 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.3.2'
     compile 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2'
+    compile 'org.hibernate:hibernate-core:5.2.17.Final'
     compile "org.springframework:spring-beans:$springVersion"
     compile "org.springframework:spring-context:$springVersion"
     compile "org.springframework:spring-tx:$springVersion"

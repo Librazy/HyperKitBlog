@@ -79,4 +79,14 @@ public interface BlogService {
      */
     @Transactional
     Page<BlogEntryEntity> getBlogPaged(Pageable page);
+
+    /**
+     * 用户博文分页
+     *
+     * @param user  用户
+     * @param page  页数
+     * @return 博文实体
+     */
+    @Transactional
+    Page<BlogEntryEntity> getUserStarPaged(UserEntity user, Pageable page);
 }

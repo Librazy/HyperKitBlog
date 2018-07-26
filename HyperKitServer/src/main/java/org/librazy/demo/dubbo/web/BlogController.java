@@ -26,6 +26,8 @@ import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -33,8 +35,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping(produces = APPLICATION_JSON_VALUE)
 @Api(value = "/blog", tags = "博客")
 public class BlogController {
-
-    private static Logger logger = LoggerFactory.getLogger(BlogController.class);
 
     private final UserService userService;
 
@@ -130,26 +130,20 @@ public class BlogController {
         return ResponseEntity.ok(blogEntries);
     }
 
+    @ApiOperation("获取用户收藏博文列表")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "成功获取用户收藏博文列表"),
+            @ApiResponse(code = 404, message = "用户不存在"),
+    })
+    @GetMapping("/blog/star/{user:\\d+}/")
+    public ResponseEntity<Page<BlogEntry>> getUserStarPaged(@PathVariable UserEntity user, @PageableDefault Pageable page) {
+        Page<BlogEntryEntity> blogEntryEntities = blogService.getUserStarPaged(user, page);
+        Page<BlogEntry> blogEntries = blogEntryEntities.map(BlogEntry::fromEntity);
+        return ResponseEntity.ok(blogEntries);
+    }
+
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(UserEntity.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                try {
-                    setValue(userService.loadUserByUsername(String.valueOf(text)));
-                } catch (UsernameNotFoundException e){
-                    logger.info("binder error when resovling user {}", text);
-                    logger.info("exception: {}", e);
-                    throw new NotFoundException(text);
-                }
-            }
-        });
-
-        binder.registerCustomEditor(BlogEntryEntity.class, new PropertyEditorSupport() {
-            @Override
-            public void setAsText(String text) {
-                setValue(blogService.get(Long.valueOf(text)));
-            }
-        });
+        ControllersAdvice.init(binder, userService, blogService);
     }
 }
