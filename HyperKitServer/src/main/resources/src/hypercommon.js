@@ -16,7 +16,11 @@ let uInfo = (id) => stor("user:" + id);
 let getUserInfo = async (uid) => {
     let c = uInfo(uid)();
     if (c) return c;
-    let ud = (await Net.getUnwrap("/user/" + uid + "/")).data;
+    let r = await Net.getUnwrap("/user/" + uid + "/");
+    if(r.status !== 200) {
+        return null;
+    }
+    let ud = r.data;
     uInfo(uid)(ud);
     return ud;
 }

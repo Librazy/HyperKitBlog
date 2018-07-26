@@ -33,6 +33,7 @@ $(async () => {
                 alert("创建失败");
                 submitBtn.prop("disabled", false);
             }
+            window.location.href = "/single.html?id=" + result.data.id;
         } else {
             let result = await Net.put("/blog/" + entryId+ "/", {
                 title: titleIpt.val(),

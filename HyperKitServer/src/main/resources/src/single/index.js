@@ -19,7 +19,7 @@ $(async () => {
     let id = entry.id;
     let title = entry.title;
     let content = entry.content;
-    let ad =  getUserInfo(entry.authorId);
+    let ad = await getUserInfo(entry.authorId);
     let author = ad.nick;
     let updated = entry.updated;
     let fragment = entryFragment(id, title, content, author, updated);
@@ -40,7 +40,7 @@ $(async () => {
     const entries = $("#entries");
     const followers = $("#followers");
     const followings = $("#followings");
-    nick.href("/person.html?id=" + uid);
+    nick.href("/person.html?id=" + entry.authorId);
     nick.text(ad.nick);
     entries.text(ad.blogEntries);
     followers.text(ad.followers);
