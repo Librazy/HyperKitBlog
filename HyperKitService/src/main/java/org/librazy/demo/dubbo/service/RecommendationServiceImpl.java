@@ -1,6 +1,5 @@
 package org.librazy.demo.dubbo.service;
 
-
 import com.alibaba.dubbo.config.annotation.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
@@ -35,12 +34,17 @@ import java.util.stream.Collectors;
 public class RecommendationServiceImpl implements RecommendationService {
 
     private static final String TITLE = "title";
+
     private static final String CONTENT = "content";
+
     private static Logger logger = LoggerFactory.getLogger(RecommendationServiceImpl.class);
+
     @Value("${es.blog.index}")
     private String index;
+
     @Value("${es.blog.type}")
     private String type;
+
     private RestHighLevelClient client;
 
     private ObjectMapper objectMapper;
@@ -50,7 +54,6 @@ public class RecommendationServiceImpl implements RecommendationService {
         this.client = client;
         this.objectMapper = objectMapper;
     }
-
 
     @Override
     public BigInteger hash(String source) {
@@ -73,7 +76,6 @@ public class RecommendationServiceImpl implements RecommendationService {
             return x;
         }
     }
-
 
     @Override
     public String simhash(List<String> ik) {
@@ -101,7 +103,6 @@ public class RecommendationServiceImpl implements RecommendationService {
         }
         return simhashfinger.toString();
     }
-
 
     @Override
     public List<RecommendBlogEntry> recommend(String simhash) throws IOException {

@@ -522,17 +522,17 @@ class RestApiAndWsTest {
     @Test
     void badRegister() throws IOException {
         final String email = "a@b.com";
-        final String password = "password";
+        final String pass = "password";
 
         // init the client session and parameters
         SRP6JavaClientSessionSHA256 signupSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
-        signupSession.step1(email, password);
+        signupSession.step1(email, pass);
 
         String salt = signupSession.generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
 
         HexHashedVerifierGenerator gen = new HexHashedVerifierGenerator(
                 config.n, config.g, SRP6JavascriptServerSessionSHA256.SHA_256);
-        String verifier = gen.generateVerifier(salt, email, password);
+        String verifier = gen.generateVerifier(salt, email, pass);
 
         SrpRegisterForm badPass = new SrpRegisterForm();
         badPass.setId(-1L);
@@ -572,17 +572,17 @@ class RestApiAndWsTest {
     @Test
     void goodRegisterWithDupId() throws IOException, SRP6Exception {
         final String email = "c@b.com";
-        final String password = "password";
+        final String pass = "password";
 
         // init the client session and parameters
         SRP6JavaClientSessionSHA256 signupSession = new SRP6JavaClientSessionSHA256(config.n, config.g);
-        signupSession.step1(email, password);
+        signupSession.step1(email, pass);
 
         String salt = signupSession.generateRandomSalt(SRP6JavascriptServerSessionSHA256.HASH_BYTE_LENGTH);
 
         HexHashedVerifierGenerator gen = new HexHashedVerifierGenerator(
                 config.n, config.g, SRP6JavascriptServerSessionSHA256.SHA_256);
-        String verifier = gen.generateVerifier(salt, email, password);
+        String verifier = gen.generateVerifier(salt, email, pass);
 
         SrpSignupForm signupForm = new SrpSignupForm();
         signupForm.setEmail(email);
@@ -678,29 +678,73 @@ class RestApiAndWsTest {
         String token = jwtTokenService.generateToken(testUser, "session");
         String token2 = jwtTokenService.generateToken(testUser2, "session");
 
-        // 关注成功
-        ResponseEntity<Void> addFollowing = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
-        assertEquals(201, addFollowing.getStatusCodeValue());
-
-        // 不允许修改他人关注
-        ResponseEntity<Void> addFollowingBadToken = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
-        assertEquals(403, addFollowingBadToken.getStatusCodeValue());
-
-        // 不允许关注自己
-        ResponseEntity<Void> addFollowingSelf = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
-        assertEquals(400, addFollowingSelf.getStatusCodeValue());
-
-        // 不允许重复关注
-        ResponseEntity<Void> addFollowing2 = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
-        assertEquals(409, addFollowing2.getStatusCodeValue());
-
-        // 删除关注成功
-        ResponseEntity<Void> deleteFollowing = testRestTemplate.exchange(RequestEntity.delete(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
-        assertEquals(204, deleteFollowing.getStatusCodeValue());
-
-        // 不允许重复删除关注
-        ResponseEntity<Void> deleteFollowing2 = testRestTemplate.exchange(RequestEntity.delete(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
-        assertEquals(409, deleteFollowing2.getStatusCodeValue());
+        {
+            // 登陆获取成功
+            ResponseEntity<User> get = testRestTemplate.exchange(RequestEntity.get(URI.create("/user/" + testUser.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), User.class);
+            assertEquals(200, get.getStatusCodeValue());
+        }
+        {
+            // 登陆更新成功
+            User user = new User();
+            user.setBio("bio");
+            ResponseEntity<User> put = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(user), User.class);
+            assertEquals(200, put.getStatusCodeValue());
+        }
+        {
+            // 匿名获取成功
+            ResponseEntity<User> get2 = testRestTemplate.exchange(RequestEntity.get(URI.create("/user/" + testUser.getId() + "/")).build(), User.class);
+            assertEquals(200, get2.getStatusCodeValue());
+            assertEquals("bio", Objects.requireNonNull(get2.getBody()).getBio());
+        }
+        {
+            // 不存在的用户
+            ResponseEntity<User> getNe = testRestTemplate.exchange(RequestEntity.get(URI.create("/user/" + 114514 + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), User.class);
+            assertEquals(404, getNe.getStatusCodeValue());
+        }
+        {
+            // 匿名更新失败
+            User user = new User();
+            user.setBio("bio");
+            ResponseEntity<User> put = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/")).body(user), User.class);
+            assertEquals(401, put.getStatusCodeValue());
+        }
+        {
+            // 不同用户更新失败
+            User user = new User();
+            user.setBio("bio");
+            ResponseEntity<User> put = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token2).body(user), User.class);
+            assertEquals(403, put.getStatusCodeValue());
+        }
+        {
+            // 关注成功
+            ResponseEntity<Void> addFollowing = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+            assertEquals(201, addFollowing.getStatusCodeValue());
+        }
+        {
+            // 不允许修改他人关注
+            ResponseEntity<Void> addFollowingBadToken = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token2).build(), Void.class);
+            assertEquals(403, addFollowingBadToken.getStatusCodeValue());
+        }
+        {
+            // 不允许关注自己
+            ResponseEntity<Void> addFollowingSelf = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+            assertEquals(400, addFollowingSelf.getStatusCodeValue());
+        }
+        {
+            // 不允许重复关注
+            ResponseEntity<Void> addFollowing2 = testRestTemplate.exchange(RequestEntity.put(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+            assertEquals(409, addFollowing2.getStatusCodeValue());
+        }
+        {
+            // 删除关注成功
+            ResponseEntity<Void> deleteFollowing = testRestTemplate.exchange(RequestEntity.delete(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+            assertEquals(204, deleteFollowing.getStatusCodeValue());
+        }
+        {
+            // 不允许重复删除关注
+            ResponseEntity<Void> deleteFollowing2 = testRestTemplate.exchange(RequestEntity.delete(URI.create("/user/" + testUser.getId() + "/following/" + testUser2.getId() + "/")).header(jwtConfigParams.tokenHeader, "Bearer " + token).build(), Void.class);
+            assertEquals(409, deleteFollowing2.getStatusCodeValue());
+        }
     }
 
     @Test
@@ -711,7 +755,7 @@ class RestApiAndWsTest {
 
         String swaggerJson = responseEntity.getBody();
         Files.createDirectories(Paths.get(outputDir));
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputDir, "swagger.json"), StandardCharsets.UTF_8)){
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputDir, "swagger.json"), StandardCharsets.UTF_8)) {
             writer.write(swaggerJson);
         }
     }

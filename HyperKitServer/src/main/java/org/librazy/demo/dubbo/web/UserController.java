@@ -10,10 +10,14 @@ import org.librazy.demo.dubbo.model.BadRequestException;
 import org.librazy.demo.dubbo.model.ConflictException;
 import org.librazy.demo.dubbo.model.User;
 import org.librazy.demo.dubbo.service.BlogService;
+import org.librazy.demo.dubbo.service.RecommendationServiceImpl;
 import org.librazy.demo.dubbo.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +36,8 @@ public class UserController {
 
     private final BlogService blogService;
 
+    private static Logger logger = LoggerFactory.getLogger(UserController.class);
+
     @Autowired
     public UserController(UserService userService, BlogService blogService) {
         this.userService = userService;
@@ -46,8 +52,10 @@ public class UserController {
     @RequestMapping(value = "/user/{user:\\d+}/", method = {RequestMethod.PATCH, RequestMethod.PUT}, consumes = APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('USER') && (#user.username.equals(principal.username) || T(org.librazy.demo.dubbo.domain.UserEntity).cast(principal).matchRole(\"ADMIN.IMPERSONATE_\" + #user.username))")
     public ResponseEntity<User> update(@PathVariable UserEntity user, @RequestBody User userForm) {
-        if (userForm.getId() != null && user.getId() != userForm.getId() || userForm.getEmail() != null && !user.getEmail().equals(userForm.getEmail())
+        if ((userForm.getId() != null && userForm.getId() != 0 && user.getId() != userForm.getId()) || (userForm.getEmail() != null && !user.getEmail().equals(userForm.getEmail()))
         ) {
+            UserEntity current = (UserEntity)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            logger.warn("User {} {} submited a update request with {} {}", current.getId(), current.getEmail(), userForm.getId(), userForm.getEmail());
             return ResponseEntity.badRequest().build();
         }
         UserEntity update = userService.update(user, userForm);
