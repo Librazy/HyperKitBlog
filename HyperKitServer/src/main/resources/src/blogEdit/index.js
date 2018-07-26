@@ -7,6 +7,8 @@ $(async () => {
 
     let titleIpt = $("#title");
     let contentIpt = $("#content");
+    let submitBtn = $("#submit");
+
     if (!newEntry) {
         let entryInfo = await Net.get("/blog/" + entryId + "/");
         if (entryInfo.status == 404) {
@@ -40,6 +42,7 @@ $(async () => {
                 alert("更新失败");
                 submitBtn.prop("disabled", false);
             }
+            window.location.href = "/single.html?id=" + result.data.id;
         }
     });
 });
