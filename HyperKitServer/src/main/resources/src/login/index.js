@@ -2,6 +2,7 @@ import Net from "../net";
 
 $(() => {
     if(Net.getQuery()["q"]){
+        console.log("cleaning session");
         Srp.cleanSession();
     }
     let emailIpt = $("#email");

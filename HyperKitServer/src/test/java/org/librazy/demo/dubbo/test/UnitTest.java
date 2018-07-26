@@ -87,7 +87,7 @@ class UnitTest {
         Map<String, Object> claims = jwtTokenService.validateClaimsFromToken(token);
         assertEquals("session.id", Jwts.claims(claims).getId());
 
-        //Two second before issue
+        //Two hundred second before issue
         jwtTokenService.setClock(now - 200000);
         assertThrows(RuntimeException.class, () -> jwtTokenService.validateClaimsFromToken(token));
 

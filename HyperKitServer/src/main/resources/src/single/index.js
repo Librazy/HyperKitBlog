@@ -32,10 +32,9 @@ $(async () => {
         followBtn.click(() => {
             star(entry.authorId);
         });
-    } else {
-        starBtn.hide();
-        followBtn.hide();
-    }
+        starBtn.show();
+        followBtn.show();
+    } 
 
     const nick = $("#nick");
     const entries = $("#entries");

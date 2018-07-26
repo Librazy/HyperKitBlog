@@ -20,8 +20,7 @@ $(async () => {
         followBtn.click(() => {
             follow(entry.authorId);
         });
-    } else {
-        followBtn.hide();
+        followBtn.show();
     }
 
     Net.get("/user/" + userId + "/").then((userInfo) => {
