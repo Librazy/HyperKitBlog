@@ -27,7 +27,7 @@ $(async () => {
         if (newEntry) {
             let result = await Net.post("/blog/", {
                 title: titleIpt.val(),
-                contentIpt: contentIpt.val()
+                content: contentIpt.val()
             });
             if (result.status !== 201) {
                 alert("创建失败");
@@ -36,7 +36,7 @@ $(async () => {
         } else {
             let result = await Net.put("/blog/" + entryId+ "/", {
                 title: titleIpt.val(),
-                contentIpt: contentIpt.val()
+                content: contentIpt.val()
             });
             if (result.status !== 200) {
                 alert("更新失败");

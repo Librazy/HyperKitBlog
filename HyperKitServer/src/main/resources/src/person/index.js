@@ -1,6 +1,5 @@
 import entryFragment from '../entryFragment';
 import follow from '../follow';
-import star from '../star';
 
 $(async () => {
     var userId = Net.getQuery()["id"];
@@ -18,7 +17,7 @@ $(async () => {
 
     if(Srp.isSignined() && userId !== Srp.uid()){
         followBtn.click(() => {
-            follow(entry.authorId);
+            follow(userId);
         });
         followBtn.show();
     }

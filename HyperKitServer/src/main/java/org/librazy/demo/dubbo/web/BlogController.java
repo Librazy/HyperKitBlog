@@ -4,6 +4,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.elasticsearch.common.Strings;
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
 import org.librazy.demo.dubbo.model.BadRequestException;
@@ -55,6 +56,9 @@ public class BlogController {
         UserEntity author = blogForm.getAuthorId() == null ?
                                     (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal() :
                                     userService.loadUserByUsername(String.valueOf(blogForm.getAuthorId()));
+        if (Strings.isNullOrEmpty(blogForm.getContent()) || Strings.isNullOrEmpty(blogForm.getTitle())) {
+            throw new BadRequestException();
+        }
         BlogEntryEntity blogEntryEntity = blogService.create(author, blogForm);
         return ResponseEntity.created(URI.create("/blog/" + blogEntryEntity.getId() + "/")).body(IdResult.from(blogEntryEntity.getId()));
     }
