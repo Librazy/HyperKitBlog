@@ -16,6 +16,12 @@ import java.util.List;
  */
 public interface BlogService {
 
+    /**
+     * 搜索博文
+     *
+     * @param keyword 关键词
+     * @return 搜索结果列表
+     */
     List<BlogEntrySearchResult> search(String keyword) throws IOException;
 
     /**
