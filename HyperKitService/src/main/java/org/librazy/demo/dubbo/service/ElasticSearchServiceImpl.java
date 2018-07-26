@@ -8,6 +8,8 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
@@ -76,6 +78,17 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         DeleteResponse deleteResponse = client.delete(deleteRequest);
         logger.info("EsDeleting request {} successful with {}", deleteRequest, deleteResponse);
 
+    }
+
+    @Override
+    public void update(BlogEntry entry) throws IOException {
+        String json = mapper.writeValueAsString(entry);
+        String id = String.valueOf(entry.getId());
+        UpdateRequest request = new UpdateRequest(index, type, id).doc(json, XContentType.JSON);
+        logger.info("EsUpdating {} {} {}", index, type, id);
+        logger.debug("EsSource {}", json);
+        UpdateResponse updateResponse = client.update(request);
+        logger.info("EsUpdating request {} successful with {}", request, updateResponse);
     }
 
     @Override

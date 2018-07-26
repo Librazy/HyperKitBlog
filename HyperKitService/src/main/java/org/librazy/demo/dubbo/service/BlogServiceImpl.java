@@ -43,7 +43,7 @@ public class BlogServiceImpl implements BlogService {
         blogEntryEntity.setContent(entry.getContent());
         blogEntryEntity.setTitle(entry.getTitle());
         blogEntryEntity.setPublish(Timestamp.from(Instant.now()));
-        BlogEntryEntity entity = blogRepository.save(blogEntryEntity);
+        BlogEntryEntity entity = blogRepository.saveAndFlush(blogEntryEntity);
         entry = BlogEntry.fromEntity(entity);
         String simhash = recommendationService.simhash(entry.getContent());
         entry.setSimhash(simhash);
@@ -60,11 +60,11 @@ public class BlogServiceImpl implements BlogService {
         if (entry.getTitle() != null) {
             old.setTitle(entry.getTitle());
         }
-        BlogEntryEntity entity = blogRepository.save(old);
+        BlogEntryEntity entity = blogRepository.saveAndFlush(old);
         entry = BlogEntry.fromEntity(entity);
         String simhash = recommendationService.simhash(entry.getContent());
         entry.setSimhash(simhash);
-        elasticSearchService.put(entry);
+        elasticSearchService.update(entry);
         return entity;
     }
 

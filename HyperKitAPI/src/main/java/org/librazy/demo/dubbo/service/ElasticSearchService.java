@@ -12,5 +12,7 @@ public interface ElasticSearchService {
 
     void delete(long id) throws IOException;
 
+    void update(BlogEntry entry)throws IOException;
+
     List<BlogEntrySearchResult> search(String text) throws IOException;
 }
