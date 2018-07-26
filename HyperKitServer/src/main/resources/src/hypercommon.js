@@ -25,7 +25,7 @@ let searchSubmit = $("#searchSubmit");
 let searchForm = $("#searchForm");
 if (searchSubmit && searchForm) {
     searchSubmit.click(() => {
-        window.location.href = "/main.html?q=" + searchForm.val();
+        window.location.href = "/index.html?q=" + searchForm.val();
     });
 }
 
