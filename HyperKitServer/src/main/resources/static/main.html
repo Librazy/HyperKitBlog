@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>personal center</title>
+	<title>HyperKitBlog</title>
 
 	<!-- meta -->
 	<meta charset="UTF-8">
@@ -48,11 +48,14 @@
 								<li class="cl-effect-11">
 									<a href="person.html">个人中心</a>
 								</li>
-								<li class="cl-effect-11">
+								<li class="cl-effect-11 signin-hide">
 									<a href="register.html">注册</a>
 								</li>
-								<li class="cl-effect-11">
+								<li class="cl-effect-11 signin-hide">
 									<a href="login.html">登录</a>
+								</li>
+								<li class="cl-effect-11 signin-show" style="display:none;">
+									<a href="login.html?q=1" q="1">退出</a>
 								</li>
 							</ul>
 						</div>
@@ -81,68 +84,12 @@
 		<div class="container">
 			<div class="row">
 				<main class="col-md-8">
-					<h2>
-						<div class="user blog title" id="bio">这个用户还没有个人简介</div>
-					</h2>
-					<hr align="left" width="700" color="#987cb9" size="2">
+
 				</main>
 				<aside class="col-md-4">
-					<div class="user-info">
-						<div class="right-col-topic">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<span id="nick">名字</span>
-							<button id="followbutton" type="submit" style="font-size: 20px;">关注</button>
-							<div class="more" align="right" id="editLink" style="display: none">
-								<a href="person_edit.html">&gt;&gt;编辑</a>
-							</div>
-						</div>
-						<hr align="left" width="300" color="#987cb9" size="2">
-						<div class="right-col-box" id="user-blog-follow">
-							<div class="num-box" id="blog-num">
-								博客
-								<br>
-<span id="entries"></span>
-							</div>
-							<div class="num-box" id="follower-num">
-								粉丝
-								<br>
-<span id="followers"></span>
-							</div>
-							<div class="num-box" id="following-num">
-								关注
-								<br>
-<span id="followings"></span>
-							</div>
-						</div>
-					</div>
-					<hr align="left" width="300" color="#987cb9" size="2">
 					<div class="right-col-topic">
-						关注的人
-						<div class="user-following-list">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<img src="img/me.jpg" height="60px" width="60px">
-						</div>
-						<div class="more" align="right">&gt;&gt;更多</div>
-					</div>
-					<hr align="left" width="300" color="#987cb9" size="2">
-					<div class="right-col-topic">
-						粉丝
-						<div class="user-follower-list">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<img src="img/me.jpg" height="60px" width="60px">
-							<img src="img/me.jpg" height="60px" width="60px">
-						</div>
-						<div class="more" align="right">&gt;&gt;更多</div>
-					</div>
-					<hr align="left" width="300" color="#987cb9" size="2">
-					<div class="right-col-topic">
-						收藏的博文
-						<ul style="font-size: 20px;">
+						最近博客
+						<ul class="blog-list">
 							<li>
 								<a href="#">Adaptive Vs. Responsive Layouts And Optimal Text Readability</a>
 							</li>
@@ -153,7 +100,35 @@
 								<a href="#">Paper by FiftyThree</a>
 							</li>
 						</ul>
-						<div class="more" align="right">&gt;&gt;更多</div>
+					</div>
+					<div class="widget widget-archives">
+						<h3 class="widget-title">Archives</h3>
+						<ul>
+							<li>
+								<a href="#">November 2014</a>
+							</li>
+							<li>
+								<a href="#">September 2014</a>
+							</li>
+							<li>
+								<a href="#">January 2013</a>
+							</li>
+						</ul>
+					</div>
+
+					<div class="widget widget-category">
+						<h3 class="widget-title">Category</h3>
+						<ul>
+							<li>
+								<a href="#">Web Design</a>
+							</li>
+							<li>
+								<a href="#">Web Development</a>
+							</li>
+							<li>
+								<a href="#">SEO</a>
+							</li>
+						</ul>
 					</div>
 				</aside>
 			</div>
@@ -194,9 +169,10 @@
 			</ul>
 		</nav>
 	</div>
+
 	<script src="js/script.js"></script>
 	<script src="hypercommon.js"></script>
-	<script src="person.js"></script>
+	<script src="main.js"></script>
 
 
 </body>

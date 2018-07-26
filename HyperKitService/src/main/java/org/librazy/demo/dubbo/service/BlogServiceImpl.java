@@ -67,6 +67,11 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    public Page<BlogEntryEntity> getUserStarPaged(UserEntity user, Pageable page) {
+        return blogRepository.findAllByStargazersContaining(user, page);
+    }
+
+    @Override
     public Page<BlogEntryEntity> getBlogPaged(Pageable page) {
         return blogRepository.findAll(page);
     }

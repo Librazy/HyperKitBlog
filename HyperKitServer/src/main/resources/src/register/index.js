@@ -8,7 +8,7 @@ $(() => {
     let pwdrIpt = $("#passwordrpt");
     registerBtn.hide();
     codeBtn.click(async (e) => {
-        codeBtn.attr("disabled", true);
+        codeBtn.prop("disabled", true);
         let email = emailIpt.val();
         if (!Valid.validEmail(email)) {
             alert("邮箱格式错误");
@@ -24,14 +24,14 @@ $(() => {
             }
             codeBtn.hide();
             registerBtn.show();
-            registerBtn.attr("disabled", false);
+            registerBtn.prop("disabled", false);
         } catch (error) {
             alert("服务器错误，请稍后尝试");
-            $(e.target).attr("disabled", false);
+            $(e.target).prop("disabled", false);
         }
     });
     registerBtn.click(async (e) => {
-        registerBtn.attr("disabled", true);
+        registerBtn.prop("disabled", true);
         let email = emailIpt.val();
         if (!Valid.validEmail(email)) {
             alert("邮箱格式错误");
@@ -66,13 +66,15 @@ $(() => {
                 }
             } else if (respRe.status === 201) {
                 alert("注册成功");
-                // TODO
+                window.location.href = "/person.html?id=" + Srp.uid();
             } else {
                 alert("注册失败 - 注册失败，请稍后重试");
             }
+            registerBtn.prop("disabled", false);
         } catch (error) {
             alert("很抱歉 - 服务器异常，请稍后重试");
             console.warn(error);
+            registerBtn.prop("disabled", false);
         }
     });
 });
