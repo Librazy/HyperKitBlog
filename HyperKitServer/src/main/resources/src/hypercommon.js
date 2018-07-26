@@ -24,7 +24,7 @@ let getUserInfo = async (uid) => {
 let searchSubmit = $("#searchSubmit");
 let searchForm = $("#searchForm");
 if (searchSubmit && searchForm) {
-    searchSubmit.click(() =>{
+    searchSubmit.click(() => {
         window.location.href = "/main.html?q=" + searchForm.val();
     });
 }
@@ -32,7 +32,9 @@ if (searchSubmit && searchForm) {
 window.uInfo = uInfo;
 window.getUserInfo = getUserInfo;
 
-if(Srp.isSignined()){
-    $(".signin-hide").hide();
-    $(".signin-show").show();
-} 
+$(() => {
+    if (Srp.isSignined()) {
+        $(".signin-hide").hide();
+        $(".signin-show").show();
+    }
+});
