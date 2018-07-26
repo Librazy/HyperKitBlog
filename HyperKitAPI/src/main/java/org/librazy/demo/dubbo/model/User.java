@@ -41,10 +41,6 @@ public class User implements Serializable {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
     protected void setId(Long id) {
         this.id = id;
     }

@@ -4,15 +4,12 @@ buildscript {
     }
     dependencies {
         classpath 'com.netflix.nebula:gradle-lint-plugin:9.3.4'
-        classpath 'com.palantir:jacoco-coverage:0.4.0'
     }
 }
 
 plugins {
     id "org.sonarqube" version "2.6.2"
 }
-
-apply plugin: 'com.palantir.jacoco-full-report'
 
 repositories { if (!System.getenv('CI')) { maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }} else {jcenter()} }
 
@@ -51,7 +48,7 @@ subprojects {
     sonarqube {
         properties {
             property "sonar.coverage.exclusions", "**/domain/*.java" // Generated Code
-            property "sonar.exclusions", "**/*Application.java,**/domain/*.java" // Not a part of application
+            property "sonar.exclusions", "**/*Application.java" // Not a part of application
             property "sonar.jacoco.reportPaths", allTestCoverageFile
         }
     }
