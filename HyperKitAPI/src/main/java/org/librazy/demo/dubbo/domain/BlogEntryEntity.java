@@ -4,6 +4,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -32,6 +33,9 @@ public class BlogEntryEntity implements Serializable {
     @NotBlank
     @Column(columnDefinition = "MEDIUMTEXT")
     private String content;
+    
+    @Column
+    private String simhash;
 
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -74,6 +78,15 @@ public class BlogEntryEntity implements Serializable {
 
     public String getContent() {
         return content;
+    }
+
+    public void setSimhash(String simhash) {
+        this.simhash = simhash;
+    }
+    
+    
+    public String getSimhash() {
+        return simhash;
     }
 
     public void setContent(String content) {

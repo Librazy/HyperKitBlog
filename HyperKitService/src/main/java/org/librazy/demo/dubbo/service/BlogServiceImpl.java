@@ -23,10 +23,13 @@ public class BlogServiceImpl implements BlogService {
 
     private final ElasticSearchService elasticSearchService;
 
+    private final RecommendationService recommendationService;
+
     @Autowired
-    public BlogServiceImpl(BlogRepository blogRepository, ElasticSearchService elasticSearchService) {
+    public BlogServiceImpl(BlogRepository blogRepository, ElasticSearchService elasticSearchService, RecommendationService recommendationService) {
         this.blogRepository = blogRepository;
         this.elasticSearchService = elasticSearchService;
+        this.recommendationService = recommendationService;
     }
 
     @Override
@@ -42,8 +45,11 @@ public class BlogServiceImpl implements BlogService {
         blogEntryEntity.setContent(entry.getContent());
         blogEntryEntity.setTitle(entry.getTitle());
         blogEntryEntity.setPublish(Timestamp.from(Instant.now()));
-        BlogEntryEntity entity = blogRepository.save(blogEntryEntity);
-        elasticSearchService.put(BlogEntry.fromEntity(entity));
+        BlogEntryEntity entity = blogRepository.saveAndFlush(blogEntryEntity);
+        entry = BlogEntry.fromEntity(entity);
+        String simhash = recommendationService.simhash(entry.getContent());
+        entry.setSimhash(simhash);
+        elasticSearchService.put(entry);
         return entity;
     }
 
@@ -57,7 +63,10 @@ public class BlogServiceImpl implements BlogService {
             old.setTitle(entry.getTitle());
         }
         BlogEntryEntity entity = blogRepository.saveAndFlush(old);
-        elasticSearchService.update(BlogEntry.fromEntity(entity));
+        entry = BlogEntry.fromEntity(entity);
+        String simhash = recommendationService.simhash(entry.getContent());
+        entry.setSimhash(simhash);
+        elasticSearchService.update(entry);
         return entity;
     }
 
