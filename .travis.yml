@@ -17,8 +17,8 @@ before_script:
 script:
 - wget -q --waitretry=2 --retry-connrefused -T 10 -O - http://127.0.0.1:9200
 - wget -q --waitretry=2 --retry-connrefused -T 10 -O - http://127.0.0.1:9200
-- ./gradlew clean build jacocoFullReport
-- ./gradlew jacocoMerge sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
+- ./gradlew clean build jacocoMerge
+- ./gradlew sonarqube -Dsonar.organization=librazy-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
 after_success:
 - fossa test
 before_cache:
