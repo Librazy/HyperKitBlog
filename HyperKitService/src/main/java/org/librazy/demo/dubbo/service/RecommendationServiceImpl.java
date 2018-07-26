@@ -2,8 +2,15 @@ package org.librazy.demo.dubbo.service;
 
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import org.apache.http.entity.ContentType;
+import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.unit.TimeValue;
@@ -19,32 +26,29 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Component
 public class RecommendationServiceImpl implements RecommendationService {
 
+    private static final String TITLE = "title";
+    private static final String CONTENT = "content";
     private static Logger logger = LoggerFactory.getLogger(RecommendationServiceImpl.class);
-
     @Value("${es.blog.index}")
     private String index;
-
     @Value("${es.blog.type}")
     private String type;
-
-    private static final String TITLE = "title";
-
-    private static final String CONTENT = "content";
-
     private RestHighLevelClient client;
 
+    private ObjectMapper objectMapper;
+
     @Autowired
-    public RecommendationServiceImpl(RestHighLevelClient client) {
+    public RecommendationServiceImpl(RestHighLevelClient client, ObjectMapper objectMapper) {
         this.client = client;
+        this.objectMapper = objectMapper;
     }
 
 
@@ -122,15 +126,19 @@ public class RecommendationServiceImpl implements RecommendationService {
         return results;
     }
 
-
     @Override
-    public List<String> ikAnalyze(String content) {
-        // TODO
-        return new ArrayList<>();
+    public List<String> ikAnalyze(String content) throws IOException {
+        String jsonString =
+                "{\"tokenizer\" : \"ik_smart\",\n" +
+                        "\"char_filter\" : [\"html_strip\"]," +
+                        "\"text\":\"" + content.replaceAll("\"", "\\\\\"") + "\"}";
+        NStringEntity entity = new NStringEntity(jsonString, ContentType.APPLICATION_JSON);
+        Response response = client.getLowLevelClient().performRequest("GET", "/" + index + "/_analyze", Collections.emptyMap(), entity);
+        TypeFactory factory = TypeFactory.defaultInstance();
+        MapType t = factory.constructMapType(HashMap.class, String.class, String.class);
+        CollectionType t2 = factory.constructCollectionType(ArrayList.class, t);
+        MapType t3 = factory.constructMapType(HashMap.class, factory.constructType(String.class), t2);
+        HashMap<String, List<HashMap<String, String>>> result = objectMapper.readValue(response.getEntity().getContent(), t3);//
+        return result.get("tokens").stream().map(tokenEntry -> tokenEntry.get("token")).collect(Collectors.toList());
     }
 }
-
-
-
-
-

@@ -11,20 +11,19 @@ import org.librazy.demo.dubbo.config.RedisUtils;
 import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.librazy.demo.dubbo.config.SrpConfigParams;
 import org.librazy.demo.dubbo.domain.UserEntity;
-import org.librazy.demo.dubbo.service.JwtTokenService;
-import org.librazy.demo.dubbo.service.SrpSessionService;
-import org.librazy.demo.dubbo.service.UserService;
-import org.librazy.demo.dubbo.service.UserSessionService;
+import org.librazy.demo.dubbo.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +57,12 @@ class UnitTest {
     @Autowired(required = false)
     @Reference
     SigningKeyResolver jwtKeyResolverService;
+
+    @Autowired
+    ElasticSearchService elasticSearchService;
+
+    @Autowired
+    RecommendationService recommendationService;
 
     @Autowired
     private StatefulRedisConnection<String, String> connection;
@@ -150,5 +155,13 @@ class UnitTest {
     @Test
     void loadNonExistUserWillNotFound() {
         assertThrows(UsernameNotFoundException.class, () -> userService.loadUserByUsername("114514"));
+    }
+
+    @Test
+    void esIk() throws IOException {
+        elasticSearchService.search("1");
+        List<String> strings = recommendationService.ikAnalyze("这是一个长句子并且还有关联词和<b> Html 标签 </b>");
+        String collect = String.join("", strings);
+        assertEquals(collect, "这是一个长句子并且还有关联词和html标签");
     }
 }
