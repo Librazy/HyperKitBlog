@@ -36,26 +36,26 @@ $(() => {
         let email = emailIpt.val();
         if (!Valid.validEmail(email)) {
             alert("邮箱格式错误");
-            $(e.target).prop("disabled", false);
+            registerBtn.prop("disabled", false);
             return;
         }
         let nick = nickIpt.val();
         let password = pwdIpt.val();
         if (!Valid.validPassword(password)) {
             alert("密码长度应在6~100之间");
-            $(e.target).prop("disabled", false);
+            registerBtn.prop("disabled", false);
             return;
         }
         let passwordRpt = pwdrIpt.val();
         if (password !== passwordRpt) {
             alert("两次密码不一致");
-            $(e.target).prop("disabled", false);
+            registerBtn.prop("disabled", false);
             return;
         }
         let code = codeIpt.val();
         if (!Valid.validCode(code)) {
             alert("验证码应为6位数字");
-            $(e.target).prop("disabled", false);
+            registerBtn.prop("disabled", false);
             return;
         }
         try {
@@ -66,11 +66,11 @@ $(() => {
             if (!respRe) {
                 if (respUp.status === 409) {
                     alert("注册失败 - 验证码错误");
-                    $(e.target).prop("disabled", false);
+                    registerBtn.prop("disabled", false);
                     return;
                 } else {
                     alert("注册失败 - 请检查是否填写正确");
-                    $(e.target).prop("disabled", false);
+                    registerBtn.prop("disabled", false);
                     return;
                 }
             } else if (respRe.status === 201) {
@@ -79,7 +79,7 @@ $(() => {
                 return;
             } else {
                 alert("注册失败 - 注册失败，请稍后重试");
-                $(e.target).prop("disabled", false);
+                registerBtn.prop("disabled", false);
                 return;
             }
         } catch (error) {
