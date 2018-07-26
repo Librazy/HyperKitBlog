@@ -133,7 +133,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                         "\"char_filter\" : [\"html_strip\"]," +
                         "\"text\":\"" + content.replaceAll("\"", "\\\\\"") + "\"}";
         NStringEntity entity = new NStringEntity(jsonString, ContentType.APPLICATION_JSON);
-        Response response = client.getLowLevelClient().performRequest("GET", "/" + index + "/_analyze", Collections.emptyMap(), entity);
+        Response response = client.getLowLevelClient().performRequest("GET", "/_analyze", Collections.emptyMap(), entity);
         TypeFactory factory = TypeFactory.defaultInstance();
         MapType t = factory.constructMapType(HashMap.class, String.class, String.class);
         CollectionType t2 = factory.constructCollectionType(ArrayList.class, t);
