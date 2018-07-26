@@ -647,7 +647,7 @@ class RestApiAndWsTest {
         ResponseEntity<BlogEntry> update2Entry = testRestTemplate.exchange(RequestEntity.put(location).header(jwtConfigParams.tokenHeader, "Bearer " + token).body(blogEntry), BlogEntry.class);
         assertEquals(200, update2Entry.getStatusCodeValue());
 
-        ResponseEntity<List<BlogEntrySearchResult>> search = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/search?q=keyword")).build(), new ParameterizedTypeReference<List<BlogEntrySearchResult>>() {
+        ResponseEntity<List<BlogEntrySearchResult>> search = testRestTemplate.exchange(RequestEntity.get(URI.create("/blog/search/?q=keyword")).build(), new ParameterizedTypeReference<List<BlogEntrySearchResult>>() {
         });
         assertEquals(200, search.getStatusCodeValue());
         List<BlogEntrySearchResult> searchResults = search.getBody();
