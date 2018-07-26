@@ -35,7 +35,7 @@ export default class Srp {
             nonce: nonce,
             sign: sign.toString(),
             timestamp: timestamp
-        })
+        });
     }
 
     static isSignined() {
@@ -43,11 +43,11 @@ export default class Srp {
     }
 
     static cleanSession() {
-        this.uid(null, 1);
-        this.key(null, 1);
-        this.jwt(null, 1);
-        this.sid(null, 1);
-        this.aes(null, 1);
+        this.uid(null, -1);
+        this.key(null, -1);
+        this.jwt(null, -1);
+        this.sid(null, -1);
+        this.aes(null, -1);
     }
 
     static saveSession(uid, key, jwt, sid, rememberMe) {
