@@ -7,11 +7,9 @@ import io.swagger.annotations.ApiResponses;
 import org.elasticsearch.common.Strings;
 import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import org.librazy.demo.dubbo.domain.UserEntity;
-import org.librazy.demo.dubbo.model.BadRequestException;
-import org.librazy.demo.dubbo.model.BlogEntry;
-import org.librazy.demo.dubbo.model.BlogEntrySearchResult;
-import org.librazy.demo.dubbo.model.IdResult;
+import org.librazy.demo.dubbo.model.*;
 import org.librazy.demo.dubbo.service.BlogService;
+import org.librazy.demo.dubbo.service.RecommendationService;
 import org.librazy.demo.dubbo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,7 +24,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URI;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -39,10 +40,13 @@ public class BlogController {
 
     private final BlogService blogService;
 
+    private final RecommendationService recommendationService;
+
     @Autowired
-    public BlogController(UserService userService, BlogService blogService) {
+    public BlogController(UserService userService, BlogService blogService, RecommendationService recommendationService) {
         this.userService = userService;
         this.blogService = blogService;
+        this.recommendationService = recommendationService;
     }
 
     @ApiOperation("创建博文")
@@ -98,8 +102,11 @@ public class BlogController {
             @ApiResponse(code = 404, message = "找不到博文"),
     })
     @GetMapping("/blog/{entry:\\d+}/")
-    public ResponseEntity<BlogEntry> get(@PathVariable BlogEntryEntity entry) {
-        return ResponseEntity.ok(BlogEntry.fromEntity(entry));
+    public ResponseEntity<BlogEntry> get(@PathVariable BlogEntryEntity entry) throws IOException {
+        BlogEntry e = BlogEntry.fromEntity(entry);
+        List<RecommendBlogEntry> recommend = recommendationService.recommend(e.getSimhash());
+        e.setRecommended(recommend.stream().filter(r -> r.getId() != e.getId()).collect(Collectors.toList()));
+        return ResponseEntity.ok(e);
     }
 
     @ApiOperation("搜索博文")
@@ -116,10 +123,22 @@ public class BlogController {
             @ApiResponse(code = 200, message = "成功获取用户博文列表"),
     })
     @GetMapping("/blog/")
-    public ResponseEntity<Page<BlogEntry>> getBlogPaged(@PageableDefault Pageable page) {
-        Page<BlogEntryEntity> blogEntryEntities = blogService.getBlogPaged(page);
-        Page<BlogEntry> blogEntries = blogEntryEntities.map(BlogEntry::fromEntity);
-        return ResponseEntity.ok(blogEntries);
+    public ResponseEntity<Page<BlogEntry>> getBlogPaged(
+            @RequestParam(value = "s", required = false) Long startTs,
+            @RequestParam(value = "t", required = false) Long endTs,
+            @PageableDefault Pageable page
+    ) {
+        if (startTs != null && endTs != null) {
+            Page<BlogEntryEntity> blogEntryEntities =
+                    blogService.getBlogBetweenPaged(
+                            Timestamp.from(Instant.ofEpochMilli(startTs)), Timestamp.from(Instant.ofEpochMilli(endTs)), page);
+            Page<BlogEntry> blogEntries = blogEntryEntities.map(BlogEntry::fromEntity);
+            return ResponseEntity.ok(blogEntries);
+        } else {
+            Page<BlogEntryEntity> blogEntryEntities = blogService.getBlogPaged(page);
+            Page<BlogEntry> blogEntries = blogEntryEntities.map(BlogEntry::fromEntity);
+            return ResponseEntity.ok(blogEntries);
+        }
     }
 
     @ApiOperation("获取用户博文分页列表")
@@ -144,6 +163,12 @@ public class BlogController {
         Page<BlogEntryEntity> blogEntryEntities = blogService.getUserStarPaged(user, page);
         Page<BlogEntry> blogEntries = blogEntryEntities.map(BlogEntry::fromEntity);
         return ResponseEntity.ok(blogEntries);
+    }
+
+    @GetMapping("/blog/refresh/")
+    public ResponseEntity<Void> refresh() {
+        blogService.refresh();
+        return ResponseEntity.ok().build();
     }
 
     @InitBinder

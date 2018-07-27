@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class BlogServiceImpl implements BlogService {
@@ -48,6 +49,8 @@ public class BlogServiceImpl implements BlogService {
         BlogEntryEntity entity = blogRepository.saveAndFlush(blogEntryEntity);
         entry = BlogEntry.fromEntity(entity);
         String simhash = recommendationService.simhash(entry.getContent());
+        entity.setSimhash(simhash);
+        entity = blogRepository.saveAndFlush(entity);
         entry.setSimhash(simhash);
         elasticSearchService.put(entry);
         return entity;
@@ -71,16 +74,19 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BlogEntryEntity> getUserBlogPaged(UserEntity user, Pageable page) {
-        return blogRepository.findAllByAuthor(user, page);
+        return blogRepository.findAllByAuthorOrderByPublish(user, page);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BlogEntryEntity> getUserStarPaged(UserEntity user, Pageable page) {
-        return blogRepository.findAllByStargazersContaining(user, page);
+        return blogRepository.findAllByStargazersContainingOrderByPublish(user, page);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BlogEntryEntity> getBlogPaged(Pageable page) {
         return blogRepository.findAll(page);
     }
@@ -94,5 +100,30 @@ public class BlogServiceImpl implements BlogService {
     @Transactional(readOnly = true)
     public BlogEntryEntity get(Long id) {
         return blogRepository.getOne(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BlogEntryEntity> getBlogBetweenPaged(Timestamp start, Timestamp end, Pageable page) {
+        return blogRepository.findAllByPublishBetweenOrderByPublish(start, end, page);
+    }
+
+    @Override
+    public void refresh() {
+        blogRepository.findAll().stream().skip(0).forEach(entity -> {
+            String simhash;
+            try {
+                simhash = recommendationService.simhash(entity.getContent());
+                entity.setSimhash(simhash);
+                long dis = 1532643563000L - 1421446763000L;
+                entity.setPublish(Timestamp.from(Instant.ofEpochMilli(Math.abs(new Random().nextLong() % dis) + 1421446763000L)));
+                blogRepository.saveAndFlush(entity);
+                BlogEntry entry = BlogEntry.fromEntity(entity);
+                entry.setSimhash(simhash);
+                elasticSearchService.put(entry);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

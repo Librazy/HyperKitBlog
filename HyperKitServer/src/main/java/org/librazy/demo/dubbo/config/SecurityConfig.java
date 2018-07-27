@@ -69,6 +69,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         config.addAllowedOrigin("http://localhost:8080");
         config.addAllowedOrigin("http://127.0.0.1:3001");
         config.addAllowedOrigin("http://localhost:3001");
+        config.addAllowedOrigin("http://127.0.0.1:3000");
+        config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

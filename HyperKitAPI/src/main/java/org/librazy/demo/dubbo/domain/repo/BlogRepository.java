@@ -7,9 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
+
 @Repository
 public interface BlogRepository extends JpaRepository<BlogEntryEntity, Long> {
-    Page<BlogEntryEntity> findAllByAuthor(UserEntity author, Pageable page);
+    Page<BlogEntryEntity> findAllByAuthorOrderByPublish(UserEntity author, Pageable page);
 
-    Page<BlogEntryEntity> findAllByStargazersContaining(UserEntity author, Pageable page);
+    Page<BlogEntryEntity> findAllByStargazersContainingOrderByPublish(UserEntity author, Pageable page);
+
+    Page<BlogEntryEntity> findAllByPublishBetweenOrderByPublish(Timestamp start, Timestamp end, Pageable page);
 }

@@ -39,7 +39,7 @@ public class UserEntity implements UserDetails, Serializable {
     @Column
     private String nick;
 
-    @Column
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String avatar;
 
     @Column

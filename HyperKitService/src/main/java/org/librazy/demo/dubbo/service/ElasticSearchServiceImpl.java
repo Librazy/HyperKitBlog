@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -49,6 +50,8 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     private static final String TITLE = "title";
 
     private static final String CONTENT = "content";
+
+    private static final String AUTHOR_ID = "authorId";
 
     private final RestHighLevelClient client;
 
@@ -99,7 +102,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
         sourceBuilder.query(QueryBuilders.multiMatchQuery(text, TITLE, CONTENT));
         sourceBuilder.from(0);
         sourceBuilder.size(10);
-        sourceBuilder.fetchSource(TITLE, CONTENT);
+        sourceBuilder.fetchSource(Arrays.asList(TITLE, AUTHOR_ID, "updated").toArray(new String[0]), Collections.singletonList(CONTENT).toArray(new String[0]));
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         highlightBuilder.field(CONTENT).fragmenter("simple");
         highlightBuilder.field(TITLE, Integer.MAX_VALUE, 1);
@@ -114,7 +117,9 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
             HighlightField titleHighlight = hit.getHighlightFields().get(TITLE);
             String title = titleHighlight != null ? titleHighlight.getFragments()[0].string() : (String) hit.getSourceAsMap().get(TITLE);
             String content = Arrays.stream(hit.getHighlightFields().get(CONTENT).getFragments()).map(Text::string).collect(Collectors.joining("\", \"", "\"", "\""));
-            BlogEntrySearchResult result = new BlogEntrySearchResult(id, title, content);
+            String authorId = String.valueOf(hit.getSourceAsMap().get(AUTHOR_ID));
+            String updated = String.valueOf(hit.getSourceAsMap().get("updated"));
+            BlogEntrySearchResult result = new BlogEntrySearchResult(id, title, content, authorId, updated);
             results.add(result);
         }
         return results;

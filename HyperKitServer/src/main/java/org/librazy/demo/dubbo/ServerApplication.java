@@ -1,6 +1,5 @@
 package org.librazy.demo.dubbo;
 
-import com.alibaba.dubbo.spring.boot.annotation.EnableDubboConfiguration;
 import com.google.common.base.Predicates;
 import org.librazy.demo.dubbo.config.SecurityInstanceUtils;
 import org.slf4j.Logger;
@@ -24,7 +23,7 @@ import java.security.SecureRandom;
 /**
  * Spring Boot 入口类
  */
-@EnableDubboConfiguration
+//@EnableDubboConfiguration
 @SpringBootApplication
 @EnableSwagger2
 @EnableTransactionManagement

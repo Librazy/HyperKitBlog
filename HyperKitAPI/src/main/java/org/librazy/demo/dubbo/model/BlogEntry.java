@@ -5,10 +5,11 @@ import org.librazy.demo.dubbo.domain.BlogEntryEntity;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.io.Serializable;
+import java.util.List;
 
 public class BlogEntry implements Serializable {
 
-    private static final long serialVersionUID = 1066499180182941836L;
+    private static final long serialVersionUID = 3302270788285451101L;
 
     @Positive
     private Long id;
@@ -27,6 +28,8 @@ public class BlogEntry implements Serializable {
     @Positive
     private Long updated;
 
+    private List<RecommendBlogEntry> recommended;
+
     public static BlogEntry fromEntity(BlogEntryEntity entity) {
         BlogEntry blogEntry = new BlogEntry();
         blogEntry.setId(entity.getId());
@@ -35,6 +38,7 @@ public class BlogEntry implements Serializable {
         blogEntry.setTitle(entity.getTitle());
         blogEntry.setPublish(entity.getPublish().getTime());
         blogEntry.setUpdated(entity.getVersion().getTime());
+        blogEntry.setSimhash(entity.getSimhash());
         return blogEntry;
     }
 
@@ -94,5 +98,13 @@ public class BlogEntry implements Serializable {
 
     public void setSimhash(String simhash) {
         this.simhash = simhash;
+    }
+
+    public List<RecommendBlogEntry> getRecommended() {
+        return recommended;
+    }
+
+    public void setRecommended(List<RecommendBlogEntry> recommended) {
+        this.recommended = recommended;
     }
 }

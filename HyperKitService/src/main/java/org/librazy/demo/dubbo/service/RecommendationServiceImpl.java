@@ -93,15 +93,12 @@ public class RecommendationServiceImpl implements RecommendationService {
         }
 
         StringBuilder simhashfinger = new StringBuilder();
-        for (int i = 0; i < 64; i++) {
-            if (v[i] > 0) {
-                v[i] = 1;
-            } else {
-                v[i] = 0;
-            }
-            simhashfinger.append(v[i]);
+        for (int i = 0; i < 32; i++) {
+            simhashfinger.append((v[i] & v[i<<1]) > 0 ? 1 : 0);
         }
-        return simhashfinger.toString();
+        String simh = simhashfinger.toString();
+        logger.info("Essim {}", simh);
+        return simh;
     }
 
     @Override
@@ -139,7 +136,9 @@ public class RecommendationServiceImpl implements RecommendationService {
         MapType t = factory.constructMapType(HashMap.class, String.class, String.class);
         CollectionType t2 = factory.constructCollectionType(ArrayList.class, t);
         MapType t3 = factory.constructMapType(HashMap.class, factory.constructType(String.class), t2);
-        HashMap<String, List<HashMap<String, String>>> result = objectMapper.readValue(response.getEntity().getContent(), t3);//
-        return result.get("tokens").stream().map(tokenEntry -> tokenEntry.get("token")).collect(Collectors.toList());
+        HashMap<String, List<HashMap<String, String>>> result = objectMapper.readValue(response.getEntity().getContent(), t3);
+        List<String> tokens = result.get("tokens").stream().map(tokenEntry -> tokenEntry.get("token")).collect(Collectors.toList());
+        logger.info("EsIk request {} successful with {}", content, tokens.size());
+        return tokens;
     }
 }

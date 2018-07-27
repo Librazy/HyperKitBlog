@@ -15,6 +15,11 @@ public class BlogEntrySearchResult {
     @NotBlank
     private String content;
 
+    @NotBlank
+    private String authorId;
+
+    private String updated;
+
     public Long getId() {
         return id;
     }
@@ -39,13 +44,23 @@ public class BlogEntrySearchResult {
         this.content = content;
     }
 
+    public String getAuthorId() {
+        return authorId;
+    }
+
+    public void setAuthorId(String authorId) {
+        this.authorId = authorId;
+    }
+
     protected BlogEntrySearchResult(){
     }
 
-    public BlogEntrySearchResult(@Positive Long id, @NotBlank String title, @NotBlank String content) {
+    public BlogEntrySearchResult(@Positive Long id, @NotBlank String title, @NotBlank String content, @NotBlank String authorId, String updated) {
         this.id = id;
         this.title = title;
         this.content = content;
+        this.authorId = authorId;
+        this.updated = updated;
     }
 
     @Override
@@ -54,6 +69,15 @@ public class BlogEntrySearchResult {
                        .add("id=" + id)
                        .add("title='" + title + "'")
                        .add("content='" + content + "'")
+                       .add("authorId='" + authorId + "'")
                        .toString();
+    }
+
+    public String getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(String updated) {
+        this.updated = updated;
     }
 }

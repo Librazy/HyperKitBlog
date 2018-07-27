@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -68,7 +69,7 @@ public interface BlogService {
      * @param page  页数
      * @return 博文实体
      */
-    @Transactional
+    @Transactional(readOnly = true)
     Page<BlogEntryEntity> getUserBlogPaged(UserEntity user, Pageable page);
 
     /**
@@ -77,7 +78,7 @@ public interface BlogService {
      * @param page  页数
      * @return 博文实体
      */
-    @Transactional
+    @Transactional(readOnly = true)
     Page<BlogEntryEntity> getBlogPaged(Pageable page);
 
     /**
@@ -87,6 +88,11 @@ public interface BlogService {
      * @param page  页数
      * @return 博文实体
      */
-    @Transactional
+    @Transactional(readOnly = true)
     Page<BlogEntryEntity> getUserStarPaged(UserEntity user, Pageable page);
+
+    @Transactional(readOnly = true)
+    Page<BlogEntryEntity> getBlogBetweenPaged(Timestamp start, Timestamp end, Pageable page);
+
+    void refresh();
 }
