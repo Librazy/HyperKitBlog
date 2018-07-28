@@ -105,7 +105,7 @@ public class BlogController {
     public ResponseEntity<BlogEntry> get(@PathVariable BlogEntryEntity entry) throws IOException {
         BlogEntry e = BlogEntry.fromEntity(entry);
         List<RecommendBlogEntry> recommend = recommendationService.recommend(e.getSimhash());
-        e.setRecommended(recommend.stream().filter(r -> r.getId() != e.getId()).collect(Collectors.toList()));
+        e.setRecommended(recommend.stream().filter(r -> !r.getId().equals(e.getId())).collect(Collectors.toList()));
         return ResponseEntity.ok(e);
     }
 
